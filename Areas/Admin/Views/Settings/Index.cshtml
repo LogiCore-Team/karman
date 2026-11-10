@@ -1,0 +1,354 @@
+@model YAGOT_2._0.Models.StoreSettings
+
+@{
+    ViewData["Title"] = "إعدادات المتجر";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/settings.css" asp-append-version="true" />
+}
+
+@section Breadcrumb {
+    <span>/</span>
+    <span>الإعدادات</span>
+}
+
+<section class="yq-settings-admin" aria-labelledby="settingsPageTitle">
+    <header class="yq-settings-hero">
+        <div class="yq-settings-hero__content">
+            <span class="yq-settings-eyebrow">تخصيص المتجر</span>
+            <h2 id="settingsPageTitle">إعدادات المتجر</h2>
+            <p>اضبط هوية الواجهة ووسائل التواصل والدفع من مكان واحد.</p>
+        </div>
+
+        <div class="yq-settings-hero__meta" aria-label="معلومات الإعدادات">
+            <strong>قابل للحفظ</strong>
+        </div>
+    </header>
+
+
+
+    <form asp-action="Index" method="post" asp-antiforgery="true" class="yq-settings-form" data-yq-settings-form>
+        <input type="hidden" asp-for="Id" />
+        <div asp-validation-summary="ModelOnly" class="yaqut-alert yaqut-alert--danger yq-settings-alert" role="alert"></div>
+
+        <div class="yq-settings-tabs" role="tablist" aria-label="أقسام الإعدادات">
+            <button class="yq-settings-tab active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general-pane" type="button" role="tab" aria-controls="general-pane" aria-selected="true">
+                <i class="bi bi-globe2" aria-hidden="true"></i>
+                <span>عام</span>
+            </button>
+            <button class="yq-settings-tab" id="storefront-tab" data-bs-toggle="tab" data-bs-target="#storefront-pane" type="button" role="tab" aria-controls="storefront-pane" aria-selected="false">
+                <i class="bi bi-shop" aria-hidden="true"></i>
+                <span>الواجهة</span>
+            </button>
+            <button class="yq-settings-tab" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments-pane" type="button" role="tab" aria-controls="payments-pane" aria-selected="false">
+                <i class="bi bi-credit-card-2-front" aria-hidden="true"></i>
+                <span>الدفع</span>
+            </button>
+        </div>
+
+        <div class="tab-content yq-settings-panels">
+            <section class="tab-pane fade show active yq-settings-panel" id="general-pane" role="tabpanel" aria-labelledby="general-tab">
+                <div class="yq-settings-panel__head">
+                    <div>
+                        <span class="yq-settings-eyebrow">البيانات الأساسية</span>
+                        <h3>التواصل والحضور الاجتماعي</h3>
+                    </div>
+                    <p>تظهر هذه القيم في الواجهة العامة وقنوات التواصل.</p>
+                </div>
+
+                <div class="yq-settings-grid">
+                    <div class="yq-settings-field">
+                        <label asp-for="WhatsAppNumber" class="form-label">رقم الواتساب</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-whatsapp text-success" aria-hidden="true"></i></span>
+                            <input asp-for="WhatsAppNumber" class="form-control" placeholder="مثال: 966500000000" />
+                        </div>
+                        <div class="form-text">هذا الرقم يستخدم في زر الواتساب السريع ورسالة إتمام الطلب.</div>
+                    </div>
+                    <div class="yq-settings-field">
+                        <label asp-for="ContactEmail" class="form-label">البريد الإلكتروني</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope" aria-hidden="true"></i></span>
+                            <input asp-for="ContactEmail" type="email" class="form-control" placeholder="info@domain.com" />
+                        </div>
+                    </div>
+                    <div class="yq-settings-field">
+                        <label asp-for="InstagramLink" class="form-label">رابط إنستجرام</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-instagram" aria-hidden="true"></i></span>
+                            <input asp-for="InstagramLink" class="form-control" dir="ltr" placeholder="https://instagram.com/..." />
+                        </div>
+                    </div>
+                    <div class="yq-settings-field">
+                        <label asp-for="TwitterLink" class="form-label">رابط X</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-twitter-x" aria-hidden="true"></i></span>
+                            <input asp-for="TwitterLink" class="form-control" dir="ltr" placeholder="https://x.com/..." />
+                        </div>
+                    </div>
+                    <div class="yq-settings-field yq-settings-field--full">
+                        <label asp-for="TikTokLink" class="form-label">رابط تيك توك</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-tiktok" aria-hidden="true"></i></span>
+                            <input asp-for="TikTokLink" class="form-control" dir="ltr" placeholder="https://tiktok.com/@@..." />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="tab-pane fade yq-settings-panel" id="storefront-pane" role="tabpanel" aria-labelledby="storefront-tab">
+                <div class="yq-settings-panel__head">
+                    <div>
+                        <span class="yq-settings-eyebrow">الواجهة الرئيسية</span>
+                        <h3>هوية العرض</h3>
+                    </div>
+                    <p>الحقول التالية تضبط النصوص الموجهة للعميل والتمييز البصري.</p>
+                </div>
+
+                <div class="yq-settings-grid">
+                    <div class="yq-settings-field">
+                        <label asp-for="FeaturedCategoryId" class="form-label">التصنيف المميز</label>
+                        <select asp-for="FeaturedCategoryId" class="form-select" asp-items="ViewBag.Categories">
+                            <option value="">تلقائي - اختيار عشوائي</option>
+                        </select>
+                        <div class="form-text">اتركه تلقائيا إذا أردت أن يتغير التصنيف في الصفحة الرئيسية بشكل عشوائي.</div>
+                    </div>
+                    <div class="yq-settings-field yq-settings-field--full">
+                        <label asp-for="HeroMarketingText" class="form-label">عنوان الهيرو</label>
+                        <input asp-for="HeroMarketingText" class="form-control" placeholder="حيث تولد الروائح كقطع فنية خالدة" />
+                    </div>
+                    <div class="yq-settings-field yq-settings-field--full">
+                        <label asp-for="HeroMarketingDesc" class="form-label">الوصف أسفل الهيرو</label>
+                        <textarea asp-for="HeroMarketingDesc" class="form-control" rows="4" placeholder="اكتشف عالما من العطور..."></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <section class="tab-pane fade yq-settings-panel" id="payments-pane" role="tabpanel" aria-labelledby="payments-tab">
+                <div class="yq-settings-panel__head">
+                    <div>
+                        <span class="yq-settings-eyebrow">الدفع</span>
+                        <h3>الحسابات والتعليمات</h3>
+                    </div>
+                    <p>يظهر هذا القسم داخل رحلة الدفع.</p>
+                </div>
+
+                <div class="yq-settings-grid">
+                    <div class="yq-settings-bank">
+                        <h4 class="yq-payment-method-extra__title">
+                            <i class="bi bi-cash-coin" aria-hidden="true"></i>
+                            <label asp-for="OmqiPaymentName" class="visually-hidden">اسم طريقة الدفع</label>
+                            <input asp-for="OmqiPaymentName" class="yq-payment-method-extra__name" placeholder="اسم طريقة الدفع" aria-label="اسم طريقة الدفع" />
+                        </h4>
+                        <div class="yq-settings-field">
+                            <label asp-for="OmqiAccountName" class="form-label">اسم الحساب</label>
+                            <input asp-for="OmqiAccountName" class="form-control" placeholder="مؤسسة الكهرمان" />
+                        </div>
+                        <div class="yq-settings-field">
+                            <label asp-for="OmqiAccountNumber" class="form-label">رقم الحساب</label>
+                            <input asp-for="OmqiAccountNumber" class="form-control" placeholder="رقم الحساب لدى العمقي" />
+                        </div>
+                    </div>
+                    <div class="yq-settings-bank">
+                        <h4 class="yq-payment-method-extra__title">
+                            <i class="bi bi-wallet2" aria-hidden="true"></i>
+                            <label asp-for="BusairiPaymentName" class="visually-hidden">اسم طريقة الدفع</label>
+                            <input asp-for="BusairiPaymentName" class="yq-payment-method-extra__name" placeholder="اسم طريقة الدفع" aria-label="اسم طريقة الدفع" />
+                        </h4>
+                        <div class="yq-settings-field">
+                            <label asp-for="BusairiAccountName" class="form-label">اسم الحساب</label>
+                            <input asp-for="BusairiAccountName" class="form-control" placeholder="مؤسسة الكهرمان" />
+                        </div>
+                        <div class="yq-settings-field">
+                            <label asp-for="BusairiAccountNumber" class="form-label">رقم الحساب</label>
+                            <input asp-for="BusairiAccountNumber" class="form-control" placeholder="رقم الحساب لدى البسيري" />
+                        </div>
+                    </div>
+                    <div class="yq-settings-bank">
+                        <h4 class="yq-payment-method-extra__title">
+                            <i class="bi bi-bank" aria-hidden="true"></i>
+                            <label asp-for="BinDowalPaymentName" class="visually-hidden">اسم طريقة الدفع</label>
+                            <input asp-for="BinDowalPaymentName" class="yq-payment-method-extra__name" placeholder="اسم طريقة الدفع" aria-label="اسم طريقة الدفع" />
+                        </h4>
+                        <div class="yq-settings-field">
+                            <label asp-for="BinDowalAccountName" class="form-label">اسم الحساب</label>
+                            <input asp-for="BinDowalAccountName" class="form-control" placeholder="مؤسسة الكهرمان" />
+                        </div>
+                        <div class="yq-settings-field">
+                            <label asp-for="BinDowalAccountNumber" class="form-label">رقم الحساب</label>
+                            <input asp-for="BinDowalAccountNumber" class="form-control" placeholder="رقم الحساب لدى بن دول" />
+                        </div>
+                    </div>
+                    <div class="yq-payment-methods-extra" data-yq-payment-methods>
+                        @for (var i = 0; i < Model.AdditionalPaymentMethods.Count; i++)
+                        {
+                            <section class="yq-settings-bank yq-payment-method-extra" data-yq-payment-method-row>
+                                <input type="hidden" asp-for="AdditionalPaymentMethods[i].Id" />
+                                <input type="hidden" asp-for="AdditionalPaymentMethods[i].Type" />
+                                <input type="hidden" asp-for="AdditionalPaymentMethods[i].Delete" value="false" data-yq-payment-delete />
+                                <input type="hidden" asp-for="AdditionalPaymentMethods[i].IsActive" value="true" />
+                                <h4 class="yq-payment-method-extra__title">
+                                    <i class="bi bi-credit-card-2-front" aria-hidden="true"></i>
+                                    <label asp-for="AdditionalPaymentMethods[i].Name" class="visually-hidden">اسم الطريقة</label>
+                                    <input asp-for="AdditionalPaymentMethods[i].Name" class="yq-payment-method-extra__name" placeholder="اسم الطريقة" aria-label="اسم طريقة الدفع" data-yq-payment-name />
+                                    <button type="button"
+                                            class="yq-payment-method-extra__remove"
+                                            data-yq-payment-remove
+                                            aria-label="حذف طريقة الدفع @Model.AdditionalPaymentMethods[i].Name"
+                                            title="حذف طريقة الدفع">
+                                        <i class="bi bi-trash3" aria-hidden="true"></i>
+                                        <span>حذف</span>
+                                    </button>
+                                </h4>
+                                <div class="yq-settings-field">
+                                    <label asp-for="AdditionalPaymentMethods[i].AccountHolderName" class="form-label">اسم الحساب</label>
+                                    <input asp-for="AdditionalPaymentMethods[i].AccountHolderName" class="form-control" placeholder="اسم صاحب الحساب" />
+                                </div>
+                                <div class="yq-settings-field">
+                                    <label asp-for="AdditionalPaymentMethods[i].AccountNumber" class="form-label">رقم الحساب</label>
+                                    <input asp-for="AdditionalPaymentMethods[i].AccountNumber" class="form-control" placeholder="رقم الحساب" dir="ltr" />
+                                </div>
+                            </section>
+                        }
+                        <button type="button" class="yq-settings-bank yq-payment-method-add-card" data-yq-payment-add>
+                            <i class="bi bi-plus-circle" aria-hidden="true"></i>
+                            <strong>إضافة طريقة دفع</strong>
+                            <span>تظهر البطاقة الجديدة هنا بجانب بقية الطرق.</span>
+                        </button>
+                        <template data-yq-payment-template>
+                            <section class="yq-settings-bank yq-payment-method-extra" data-yq-payment-method-row>
+                                <input type="hidden" name="AdditionalPaymentMethods[__index__].Id" value="" />
+                                <input type="hidden" name="AdditionalPaymentMethods[__index__].Type" value="" />
+                                <input type="hidden" name="AdditionalPaymentMethods[__index__].Delete" value="false" data-yq-payment-delete />
+                                <input type="hidden" name="AdditionalPaymentMethods[__index__].IsActive" value="true" />
+                                <h4 class="yq-payment-method-extra__title">
+                                    <i class="bi bi-credit-card-2-front" aria-hidden="true"></i>
+                                    <label class="visually-hidden" for="AdditionalPaymentMethods___index___Name">اسم الطريقة</label>
+                                    <input id="AdditionalPaymentMethods___index___Name" name="AdditionalPaymentMethods[__index__].Name" class="yq-payment-method-extra__name" placeholder="اسم الطريقة" aria-label="اسم طريقة الدفع" data-yq-payment-name />
+                                    <button type="button"
+                                            class="yq-payment-method-extra__remove"
+                                            data-yq-payment-remove
+                                            aria-label="حذف طريقة الدفع الجديدة"
+                                            title="حذف طريقة الدفع">
+                                        <i class="bi bi-trash3" aria-hidden="true"></i>
+                                        <span>حذف</span>
+                                    </button>
+                                </h4>
+                                <div class="yq-settings-field">
+                                    <label class="form-label" for="AdditionalPaymentMethods___index___AccountHolderName">اسم الحساب</label>
+                                    <input id="AdditionalPaymentMethods___index___AccountHolderName" name="AdditionalPaymentMethods[__index__].AccountHolderName" class="form-control" placeholder="اسم صاحب الحساب" />
+                                </div>
+                                <div class="yq-settings-field">
+                                    <label class="form-label" for="AdditionalPaymentMethods___index___AccountNumber">رقم الحساب</label>
+                                    <input id="AdditionalPaymentMethods___index___AccountNumber" name="AdditionalPaymentMethods[__index__].AccountNumber" class="form-control" placeholder="رقم الحساب" dir="ltr" />
+                                </div>
+                            </section>
+                        </template>
+                    </div>
+                    <div class="yq-settings-bank">
+                        <h4 class="yq-payment-method-extra__title">
+                            <i class="bi bi-three-dots" aria-hidden="true"></i>
+                            <label asp-for="OtherPaymentName" class="visually-hidden">اسم طريقة الدفع</label>
+                            <input asp-for="OtherPaymentName" class="yq-payment-method-extra__name" placeholder="اسم طريقة الدفع" aria-label="اسم طريقة الدفع" />
+                        </h4>
+                        <div class="yq-settings-field">
+                            <label asp-for="OtherPaymentInstructions" class="form-label">التعليمات</label>
+                            <textarea asp-for="OtherPaymentInstructions" class="form-control" rows="4" placeholder="تعليمات الدفع بالطرق الأخرى..."></textarea>
+                            <div class="form-text">سيظهر هذا النص للعميل عند اختيار طريقة الدفع الأخرى.</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer class="yq-settings-actions">
+            <button type="reset" class="btn-yaqut-outline">
+                <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                <span>إلغاء التغييرات</span>
+            </button>
+            <button type="submit" class="btn-yaqut-gold" data-yq-settings-submit disabled>
+                <i class="bi bi-save2" aria-hidden="true"></i>
+                <span>حفظ الإعدادات</span>
+            </button>
+        </footer>
+    </form>
+</section>
+
+@section Scripts {
+    <script nonce="@Context.Items["csp-nonce"]">
+        (() => {
+            const feedback = document.querySelector('[data-yq-settings-feedback]');
+            if (!feedback) {
+                return;
+            }
+
+            feedback.focus({ preventScroll: true });
+            feedback.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        })();
+
+        (() => {
+            const list = document.querySelector('[data-yq-payment-methods]');
+            const template = document.querySelector('[data-yq-payment-template]');
+            const addButton = document.querySelector('[data-yq-payment-add]');
+            if (!list || !template || !addButton) {
+                return;
+            }
+
+            let nextIndex = list.querySelectorAll('[data-yq-payment-method-row]').length;
+            const settingsForm = list.closest('form');
+            const initialRows = new Set(list.querySelectorAll('[data-yq-payment-method-row]'));
+
+            addButton.addEventListener('click', () => {
+                const html = template.innerHTML.replaceAll('__index__', String(nextIndex));
+                nextIndex += 1;
+                addButton.insertAdjacentHTML('beforebegin', html);
+                addButton.previousElementSibling?.querySelector('input:not([type="hidden"])')?.focus();
+            });
+
+            list.addEventListener('click', (event) => {
+                const removeButton = event.target.closest('[data-yq-payment-remove]');
+                if (!removeButton) {
+                    return;
+                }
+
+                const row = removeButton.closest('[data-yq-payment-method-row]');
+                const methodName = row?.querySelector('[data-yq-payment-name]')?.value?.trim() || 'طريقة الدفع';
+                if (!window.confirm(`هل تريد حذف "${methodName}" من طرق الدفع؟ سيتم تطبيق الحذف بعد حفظ الإعدادات.`)) {
+                    return;
+                }
+
+                const deleteInput = row?.querySelector('[data-yq-payment-delete]');
+                if (deleteInput && deleteInput.value === 'false' && row?.querySelector('input[name$=".Id"]')?.value) {
+                    deleteInput.value = 'true';
+                    row.hidden = true;
+                    return;
+                }
+
+                row?.remove();
+            });
+
+            settingsForm?.addEventListener('reset', () => {
+                window.setTimeout(() => {
+                    list.querySelectorAll('[data-yq-payment-method-row]').forEach((row) => {
+                        if (!initialRows.has(row)) {
+                            row.remove();
+                            return;
+                        }
+
+                        row.hidden = false;
+                        const deleteInput = row.querySelector('[data-yq-payment-delete]');
+                        if (deleteInput) {
+                            deleteInput.value = 'false';
+                        }
+                    });
+                    nextIndex = initialRows.size;
+                }, 0);
+            });
+
+        })();
+
+    </script>
+    <script src="~/js/admin/settings/form-action-state.js" asp-append-version="true"></script>
+    <partial name="_YaqutOperationDialog" />
+}

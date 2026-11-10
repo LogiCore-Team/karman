@@ -1,0 +1,139 @@
+@model IEnumerable<YAGOT_2._0.Services.Caching.Dtos.CategorySummaryDto>
+@using Microsoft.AspNetCore.Html
+@{
+    ViewData["Title"] = "التصنيفات";
+    var categories = Model.ToList();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/categories/index.css" asp-append-version="true" />
+}
+
+<div class="yq-categories-page">
+
+    @{
+        Func<dynamic, IHtmlContent> catBreadcrumb = @<text>
+            <a asp-controller="Home" asp-action="Index">الرئيسية</a>
+            <i class="bi bi-chevron-left" aria-hidden="true"></i>
+            <span>التصنيفات</span>
+        </text>;
+
+        var headerVM = new YAGOT_2._0.Models.PageHeaderViewModel {
+            Variant = "Catalog",
+            Title = "التصنيفات",
+            Subtitle = "اكتشف تصنيفاتنا المنسقة بعناية، وابحث عن العطر الذي يعكس شخصيتك الفريدة.",
+            Breadcrumbs = catBreadcrumb(null)
+        };
+    }
+    <partial name="_PageHeader" model="headerVM" />
+
+    @if (categories.Any())
+    {
+        <div class="yq-categories-grid">
+            @for (var i = 0; i < categories.Count; i++)
+            {
+                var cat = categories[i];
+                var productCount = cat.SellableProductsCount;
+                var categoryImageUrl = Url.Content("~/images/placeholder-product.svg");
+                if (!string.IsNullOrWhiteSpace(cat.Imageurl))
+                {
+                    var candidateImageUrl = cat.Imageurl.Trim();
+                    if (Uri.TryCreate(candidateImageUrl, UriKind.Absolute, out var absoluteImageUri))
+                    {
+                        if (absoluteImageUri.Scheme == Uri.UriSchemeHttp || absoluteImageUri.Scheme == Uri.UriSchemeHttps)
+                        {
+                            categoryImageUrl = candidateImageUrl;
+                        }
+                    }
+                    else
+                    {
+                        var localImageUrl = candidateImageUrl.TrimStart('/');
+                        while (localImageUrl.StartsWith("./", StringComparison.Ordinal))
+                        {
+                            localImageUrl = localImageUrl[2..];
+                        }
+
+                        var pathEnd = localImageUrl.IndexOfAny(new[] { '?', '#' });
+                        var localImagePath = pathEnd >= 0 ? localImageUrl[..pathEnd] : localImageUrl;
+                        var decodedLocalPath = Uri.UnescapeDataString(localImagePath).Replace('\\', '/');
+                        var hasParentSegment = decodedLocalPath.Split('/', StringSplitOptions.RemoveEmptyEntries).Contains("..");
+                        if (!string.IsNullOrWhiteSpace(localImagePath) &&
+                            !localImagePath.Contains(':') &&
+                            !localImagePath.Contains('\\') &&
+                            !hasParentSegment)
+                        {
+                            categoryImageUrl = Url.Content("~/" + localImageUrl);
+                        }
+                    }
+                }
+                <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@cat.Id"
+                   class="yq-cat-luxury-tile yq-reveal">
+                    
+                    <div class="yq-cat-luxury-tile__bg">
+                        @if (!string.IsNullOrEmpty(cat.Imageurl))
+                        {
+                            <img src="@categoryImageUrl" alt="" aria-hidden="true"
+                                 data-yaqut-fallback="/images/placeholder-product.svg"
+                                 loading="@(i < 3 ? "eager" : "lazy")"
+                                 decoding="async" />
+                        }
+                        else
+                        {
+                            <div class="yq-cat-luxury-tile__placeholder"><i class="bi bi-flower2"></i></div>
+                        }
+                        <div class="yq-cat-luxury-tile__overlay-gradient"></div>
+                    </div>
+
+                    <div class="yq-cat-luxury-tile__content">
+                        <div class="yq-cat-luxury-tile__glass">
+                            <h2 class="yq-cat-luxury-tile__name">@cat.Name</h2>
+                            @if (!string.IsNullOrEmpty(cat.Description))
+                            {
+                                <p class="yq-cat-luxury-tile__desc">@cat.Description</p>
+                            }
+                            <div class="yq-cat-luxury-tile__footer">
+                                <span class="yq-cat-luxury-tile__count">
+                                    <i class="bi bi-box-seam"></i>
+                                    @if (productCount == 0)
+                                    {
+                                        <text>لا توجد منتجات</text>
+                                    }
+                                    else if (productCount == 1)
+                                    {
+                                        <text>منتج واحد</text>
+                                    }
+                                    else if (productCount == 2)
+                                    {
+                                        <text>منتجان</text>
+                                    }
+                                    else if (productCount >= 3 && productCount <= 10)
+                                    {
+                                        <text>@productCount منتجات</text>
+                                    }
+                                    else
+                                    {
+                                        <text>@productCount منتج</text>
+                                    }
+                                </span>
+                                <div class="yq-cat-luxury-tile__action">
+                                    <span class="yq-cat-luxury-tile__action-text">تصفح المنتجات</span> <i class="bi bi-arrow-left"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="yaqut-empty yq-glass yq-categories-empty yq-reveal">
+            <i class="bi bi-flower1 yaqut-empty__icon"></i>
+            <h2 class="yq-categories-empty__title">لا توجد تصنيفات متاحة حالياً</h2>
+            <p class="yaqut-empty__text">عُد قريباً لاكتشاف تصنيفاتنا الجديدة.</p>
+            <a asp-controller="Products" asp-action="Index" class="btn-yaqut-gold mt-3">
+                <i class="bi bi-stars"></i> تصفح جميع المنتجات
+            </a>
+        </div>
+    }
+</div>

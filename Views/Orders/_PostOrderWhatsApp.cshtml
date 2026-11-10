@@ -1,0 +1,25 @@
+@model string?
+
+@if (!string.IsNullOrWhiteSpace(Model))
+{
+    <aside class="yq-confirm-support-card" aria-label="مساعدة واستفسارات الطلب">
+        <div class="yq-confirm-support-card__header">
+            <span class="yq-confirm-support-card__icon" aria-hidden="true">
+                <i class="bi bi-whatsapp"></i>
+            </span>
+            <div class="yq-confirm-support-card__text">
+                <h3 class="yq-confirm-support-card__title">تحتاج مساعدة بخصوص طلبك؟</h3>
+                <p class="yq-confirm-support-card__desc">فريق خدمة العملاء متاح للإجابة على استفساراتك عبر واتساب.</p>
+            </div>
+        </div>
+        <a href="@Model"
+           class="yq-confirm-support-card__btn"
+           target="_blank"
+           rel="noopener noreferrer"
+           aria-label="التواصل مع إدارة المتجر عبر واتساب بخصوص الطلب (يفتح في نافذة جديدة)">
+            <i class="bi bi-whatsapp" aria-hidden="true"></i>
+            <span>مراسلة المتجر عبر واتساب</span>
+            <i class="bi bi-box-arrow-up-right yq-confirm-support-card__ext" aria-hidden="true"></i>
+        </a>
+    </aside>
+}

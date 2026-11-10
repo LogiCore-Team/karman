@@ -1,0 +1,53 @@
+@model RecoveryModel
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "استعادة كلمة المرور";
+}
+
+<div class="yaqut-auth-page">
+    <article class="yaqut-auth-card yaqut-auth-card--single">
+        <div class="yaqut-auth-card__shine" aria-hidden="true"></div>
+        <div class="yaqut-auth-card__body">
+            <div class="yaqut-auth-logo">
+                <div class="yaqut-logo-wrap yaqut-logo-wrap--auth">
+                    <img src="~/images/yaqut-logo.png" asp-append-version="true" alt="الكهرمان" class="yaqut-logo" />
+                </div>
+            </div>
+
+            <h1 class="yaqut-auth-title">استعادة كلمة المرور</h1>
+            <p class="yaqut-auth-subtitle">سنرسل إلى بريدك رابطاً آمناً صالحاً لمدة 15 دقيقة.</p>
+
+            @if (TempData["RecoveryMessage"] is string message)
+            {
+                <div class="yaqut-alert yaqut-alert--success" role="status">@message</div>
+            }
+
+            <div asp-validation-summary="ModelOnly" class="yaqut-alert yaqut-alert--danger"></div>
+
+            <form asp-controller="Account" asp-action="RecoveryAccount" method="post">
+                @Html.AntiForgeryToken()
+                <div class="yaqut-form-group">
+                    <label asp-for="Email" class="yaqut-form-label">البريد الإلكتروني</label>
+                    <div class="yaqut-input-wrap">
+                        <i class="bi bi-envelope"></i>
+                        <input asp-for="Email" type="email" class="yaqut-form-input"
+                               required autocomplete="email" placeholder="name@example.com"
+                               aria-describedby="RecoveryEmailValidation" />
+                    </div>
+                    <span asp-validation-for="Email" id="RecoveryEmailValidation" class="yq-field-error"></span>
+                </div>
+
+                <button type="submit" class="btn-yaqut-gold yaqut-auth-submit">
+                    <i class="bi bi-send"></i> إرسال رابط الاستعادة
+                </button>
+                <a asp-action="Auth" class="btn-yaqut-outline yaqut-auth-submit mt-2" >
+                    الرجوع لتسجيل الدخول
+                </a>
+            </form>
+        </div>
+    </article>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

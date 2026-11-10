@@ -1,0 +1,120 @@
+@model List<YAGOT_2._0.Models.Sale>
+@{
+    ViewData["Title"] = "مسودات المبيعات";
+    var openSalesDay = ViewBag.OpenSalesDay as YAGOT_2._0.Models.SalesDay;
+}
+
+@section Breadcrumb {
+    <span>/</span>
+    <a asp-action="Index">البيع السريع</a>
+    <span>/</span>
+    <span>مسودات المبيعات</span>
+}
+
+@Html.AntiForgeryToken()
+<div class="container-fluid px-0">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+        <div>
+            <h2 class="h3 fw-bold text-dark mb-1">مسودات المبيعات (Draft Sales)</h2>
+            <p class="text-muted small mb-0">جميع العمليات غير المكتملة والمحفوظة مؤقتاً في سيرفر قاعدة البيانات</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            @if (openSalesDay != null)
+            {
+                <a asp-action="NewSale" class="btn btn-yaqut-gold fw-bold px-4 py-2 shadow-sm">
+                    <i class="bi bi-plus-circle-fill me-1"></i> عملية بيع جديدة
+                </a>
+            }
+            <a asp-action="Index" class="btn btn-outline-secondary px-3 py-2 fw-bold">العودة للرئيسية</a>
+        </div>
+    </div>
+
+    <div id="posAlertContainer"></div>
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 p-5 text-center my-4">
+            <div class="rounded-circle bg-light text-muted p-4 d-inline-flex mb-3">
+                <i class="bi bi-journal-x display-4"></i>
+            </div>
+            <h4 class="h5 fw-bold mb-2">لا توجد مسودات مبيعات نشطة حالياً</h4>
+            <p class="text-muted small mb-4">يمكنك إنشاء مسودة جديدة وحفظها في أي وقت للاستكمال من أي جهاز آخر.</p>
+            @if (openSalesDay != null)
+            {
+                <div>
+                    <a asp-action="NewSale" class="btn btn-yaqut-gold px-4 py-2 fw-bold">
+                        <i class="bi bi-cart-plus-fill me-1"></i> بدء بيع جديد
+                    </a>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="table-responsive w-100">
+                <table class="table table-hover align-middle mb-0 w-100">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="yq-th-w16">رقم الفاتورة</th>
+                            <th class="yq-th-w12">تاريخ يوم البيع</th>
+                            <th class="yq-th-w15">العميل</th>
+                            <th class="yq-th-w11">عدد العناصر</th>
+                            <th class="yq-th-w10">خصم الفاتورة</th>
+                            <th class="yq-th-w15">المبلغ الإجمالي النهائي</th>
+                            <th class="yq-th-w11">آخر تحديث</th>
+                            <th class="yq-th-w10 text-end">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var draft in Model)
+                        {
+                            <tr id="draft-row-@draft.Id">
+                                <td>
+                                    <strong class="text-warning fs-6 text-nowrap">@draft.InvoiceNumber</strong>
+                                    <span class="badge bg-secondary text-white px-2 py-1 ms-1 text-nowrap">مسودة</span>
+                                </td>
+                                <td class="text-nowrap">
+                                    <span class="pos-text-muted"><i class="bi bi-calendar3 me-1"></i>@(draft.SalesDay?.Date.ToString("yyyy/MM/dd") ?? "-")</span>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(draft.CustomerName))
+                                    {
+                                        <div class="fw-bold pos-text-main">@draft.CustomerName</div>
+                                        @if (!string.IsNullOrWhiteSpace(draft.CustomerPhone))
+                                        {
+                                            <div class="pos-text-muted small text-nowrap"><i class="bi bi-telephone me-1"></i>@draft.CustomerPhone</div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="pos-text-muted fst-italic">عميل عادي</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-info text-dark px-3 py-1 rounded-pill fw-bold text-nowrap">
+                                        @draft.SaleItems.Count أصناف
+                                    </span>
+                                </td>
+                                <td class="text-nowrap">@(draft.DiscountTotal > 0 ? draft.DiscountTotal.ToYaqutPrice() : "-")</td>
+                                <td class="text-nowrap">
+                                    <strong class="fs-6 fw-bold pos-text-main">@(draft.FinalAmount.ToYaqutPrice())</strong>
+                                </td>
+                                <td class="pos-text-muted small text-nowrap">
+                                    @((draft.UpdatedAt ?? draft.CreatedAt).ToString("yyyy/MM/dd HH:mm"))
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    <a asp-action="NewSale" asp-route-draftId="@draft.Id" class="btn btn-sm btn-outline-secondary fw-bold me-1 px-3">
+                                        <i class="bi bi-eye me-1"></i> عرض
+                                    </a>
+                                    <a asp-action="NewSale" asp-route-draftId="@draft.Id" asp-route-edit="true" class="btn btn-sm btn-yaqut-gold fw-bold px-3">
+                                        <i class="bi bi-pencil-square me-1"></i> تعديل
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

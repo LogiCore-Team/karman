@@ -1,0 +1,414 @@
+@model YAGOT_2._0.Models.Order
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Html
+@using YAGOT_2._0.Services
+@inject DealingAPI DealingApiService
+@{
+    ViewData["Title"] = $"تفاصيل الطلب #{Model.Id} | الكهرمان";
+    var items = Model.Orderitems?.ToList() ?? new List<YAGOT_2._0.Models.Orderitem>();
+    var fulfilledValue = Model.Finalfulfilledamount ?? Model.Totalamount;
+    var isConflictAwaitingDecision = Model.Workflowstate == OrderWorkflowStates.ConflictAwaitingDecision;
+    var conflictHasPaymentReview = Model.Paymentreviewedat.HasValue && Model.Paymentreviewedbyuserid.HasValue;
+    var inventoryConflict = ViewData["InventoryConflict"] as CustomerInventoryConflictViewModel;
+    var paymentPresentations = ViewData["PaymentMethodPresentations"] as IReadOnlyDictionary<string, PaymentMethodPresentation>;
+    var paymentPresentation = !string.IsNullOrWhiteSpace(Model.Paymentmethod) &&
+        paymentPresentations?.TryGetValue(Model.Paymentmethod, out var configuredPayment) == true
+            ? configuredPayment
+            : new PaymentMethodPresentation(
+                Model.Paymentmethod ?? string.Empty,
+                string.IsNullOrWhiteSpace(Model.Paymentmethod) ? "طريقة دفع غير محددة" : "طريقة دفع مسجلة سابقاً",
+                string.Empty,
+                string.Empty,
+                null,
+                false);
+
+    var isCancelled = Model.Status is "Cancelled";
+
+    var paymentStateDescription = isCancelled
+        ? (Model.Paymentverifiedat.HasValue ? "أُلغي الطلب بعد مراجعة الدفع." : "أُلغي الطلب.")
+        : isConflictAwaitingDecision
+            ? (conflictHasPaymentReview ? "تمت مراجعة الدفع، وتأكيده ينتظر قرارك بشأن الكميات." : "المتجر يراجع الدفع الآن.")
+            : Model.Paymentstatus == "Paid" || Model.Status is "Paid" or "Processed" or "Shipped" or "Delivered"
+                ? "تم تأكيد الدفع."
+                : "الدفع بانتظار مراجعة المتجر.";
+
+    var paymentStateKind = isCancelled
+        ? "cancelled"
+        : isConflictAwaitingDecision
+            ? "review"
+            : Model.Paymentstatus == "Paid" || Model.Status is "Paid" or "Processed" or "Shipped" or "Delivered"
+                ? "verified"
+                : "pending";
+
+    var delivery = Model.Deliveryorder;
+    var buyerName = !string.IsNullOrWhiteSpace(delivery?.Fullname)
+        ? delivery.Fullname
+        : (!string.IsNullOrWhiteSpace(Model.User?.Name)
+            ? Model.User.Name
+            : (!string.IsNullOrWhiteSpace(User.Identity?.Name) ? User.Identity.Name : "العميل"));
+
+    var rawBuyerPhone = !string.IsNullOrWhiteSpace(delivery?.Phonenumber)
+        ? delivery.Phonenumber
+        : (!string.IsNullOrWhiteSpace(Model.User?.Phone)
+            ? Model.User.Phone
+            : User.FindFirst(ClaimTypes.MobilePhone)?.Value);
+    var buyerPhone = !string.IsNullOrWhiteSpace(rawBuyerPhone)
+        ? (DealingApiService.DecryptPhone(rawBuyerPhone) ?? rawBuyerPhone)
+        : "-";
+
+    var recipientName = !string.IsNullOrWhiteSpace(delivery?.District)
+        ? delivery.District
+        : buyerName;
+
+    var recipientPhone = !string.IsNullOrWhiteSpace(delivery?.Secondphonenumber)
+        ? delivery.Secondphonenumber
+        : buyerPhone;
+
+    var orderDate = Model.Orderdate.HasValue ? Model.Orderdate.Value.ToString("dd/MM/yyyy HH:mm") : "-";
+
+    var statusSteps = new[] { "Pending", "Paid", "Processed", "Shipped", "Delivered" };
+    var currentStepIndex = Array.IndexOf(statusSteps, Model.Status);
+    if (currentStepIndex < 0) currentStepIndex = 0;
+
+    var stepLabels = new Dictionary<string, string>
+    {
+        ["Pending"] = "تم استلام الطلب",
+        ["Paid"] = "تم الدفع",
+        ["Processed"] = "قيد التحضير",
+        ["Shipped"] = "تم الشحن",
+        ["Delivered"] = "تم التوصيل"
+    };
+
+    var currentStepLabel = stepLabels.TryGetValue(Model.Status, out var currLabel) ? currLabel : "تم استلام الطلب";
+    var nextStepIndex = currentStepIndex + 1;
+    var nextStepLabel = nextStepIndex < statusSteps.Length ? stepLabels[statusSteps[nextStepIndex]] : null;
+
+    string stateAr = Model.Status switch
+    {
+        "Pending" => "قيد الانتظار",
+        "Paid" => "تم الدفع",
+        "Processed" => "قيد التحضير",
+        "Shipped" => "تم الشحن",
+        "Delivered" => "تم التوصيل",
+        _ => "ملغي"
+    };
+
+    var badgeClass = Model.Status.ToLower() switch
+    {
+        "pending" => "yaqut-badge--pending",
+        "paid" => "yaqut-badge--processed",
+        "processed" => "yaqut-badge--processed",
+        "shipped" => "yaqut-badge--shipped",
+        "delivered" => "yaqut-badge--delivered",
+        _ => "yaqut-badge--cancelled"
+    };
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/orders/details.css" asp-append-version="true" />
+}
+
+<div class="yq-order-details" data-yq-order-details>
+
+    @{
+        Func<dynamic, IHtmlContent> odBreadcrumb = @<text>
+            <a asp-controller="Home" asp-action="Index">الرئيسية</a>
+            <i class="bi bi-chevron-left" aria-hidden="true"></i>
+            <a asp-controller="Orders" asp-action="Index">طلباتي</a>
+            <i class="bi bi-chevron-left" aria-hidden="true"></i>
+            <span>طلب #@Model.Id</span>
+        </text>;
+
+        Func<dynamic, IHtmlContent> odMetadata = @<text>
+            <span class="yq-od-meta-item yq-od-meta-item--order-id">
+                <span>رقم الطلب:</span>
+                <strong id="yqDetailsOrderNumber"><bdi dir="ltr">#@Model.Id</bdi></strong>
+            </span>
+            <span class="yq-od-meta-item yq-od-meta-item--tracking">
+                <span>رقم التتبع:</span>
+                <strong id="yqDetailsTrackingNumber"><bdi dir="ltr">@Model.Trackingnumber</bdi></strong>
+                <button type="button" class="yq-od-copy-btn btn btn-sm btn-link p-0 text-secondary" id="yqDetailsCopyTrackingBtn" aria-label="نسخ رقم التتبع">
+                    <i class="bi bi-clipboard" aria-hidden="true"></i>
+                </button>
+                <span class="visually-hidden" id="yqDetailsCopyStatus" role="status" aria-live="polite"></span>
+            </span>
+            <span class="yq-od-meta-item">
+                <span>تاريخ الطلب:</span>
+                <bdi dir="ltr">@orderDate</bdi>
+            </span>
+            <span class="yq-od-meta-item yq-od-meta-item--badges ms-auto">
+                @if (isConflictAwaitingDecision)
+                {
+                    <span class="yaqut-badge yaqut-badge--pending">قيد الانتظار</span>
+                    <span class="yaqut-badge yaqut-badge--warning"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> بانتظار قرارك</span>
+                }
+                else
+                {
+                    <span class="yaqut-badge @badgeClass">@stateAr</span>
+                }
+            </span>
+        </text>;
+
+        Func<dynamic, IHtmlContent> odActions = @<a asp-controller="Orders" asp-action="Index" class="btn-yaqut-outline btn-sm"><i class="bi bi-arrow-right" aria-hidden="true"></i> العودة لطلباتي</a>;
+
+        var odHeaderVM = new YAGOT_2._0.Models.PageHeaderViewModel {
+            Variant = "Detail",
+            Title = "<i class=\"bi bi-receipt\" aria-hidden=\"true\"></i> تفاصيل الطلب",
+            Breadcrumbs = odBreadcrumb != null ? odBreadcrumb(null!) : null,
+            Metadata = odMetadata != null ? odMetadata(null!) : null,
+            Actions = odActions(null!)
+        };
+    }
+    <partial name="_PageHeader" model="odHeaderVM" />
+
+    @if (isCancelled)
+    {
+        <div class="yaqut-alert yaqut-alert--danger yq-reveal" role="status">
+            <div class="yq-alert-content">
+                <div class="yq-alert-title"><i class="bi bi-exclamation-circle" aria-hidden="true"></i> <strong>تم إلغاء هذا الطلب.</strong></div>
+                @if (Model.CancelledAt.HasValue)
+                {
+                    <div class="yq-alert-meta">تاريخ الإلغاء: <bdi dir="ltr">@Model.CancelledAt.Value.ToString("dd/MM/yyyy HH:mm")</bdi></div>
+                }
+                @if (Model.Workflowstate == OrderWorkflowStates.ConflictResolvedCancel)
+                {
+                    <div class="yq-alert-reason">أُلغي الطلب بناءً على اختيارك لعدم توفر المنتجات المطلوبة.</div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- STATUS TIMELINE -->
+        <section class="yq-od-timeline yq-glass yq-reveal @(isConflictAwaitingDecision ? "yq-od-timeline--conflict" : "")" aria-label="مراحل متابعة الطلب">
+            @if (isConflictAwaitingDecision)
+            {
+                <div class="yq-timeline-conflict-callout" role="status">
+                    <i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i>
+                    <span>تمت مراجعة الدفع، ومتابعة تجهيز الطلب معلقة بانتظار قرارك بشأن الكميات المتاحة في البطاقة أدناه.</span>
+                </div>
+            }
+            <div class="yq-timeline-steps">
+                @for (var i = 0; i < statusSteps.Length; i++)
+                {
+                    var isDone = i < currentStepIndex;
+                    var isActive = i == currentStepIndex;
+                    <div class="yq-timeline-step @(isDone ? "is-done" : "") @(isActive ? "is-active" : "")">
+                        <span class="yq-timeline-step__dot">
+                            @if (isDone)
+                            {
+                                <i class="bi bi-check-lg" aria-hidden="true"></i>
+                            }
+                            else
+                            {
+                                @(i + 1)
+                            }
+                        </span>
+                        <span class="yq-timeline-step__label">@stepLabels[statusSteps[i]]</span>
+                    </div>
+                    @if (i < statusSteps.Length - 1)
+                    {
+                        <div class="yq-timeline-connector @(isDone ? "is-done" : "")"></div>
+                    }
+                }
+            </div>
+            @if (!isConflictAwaitingDecision)
+            {
+                <div class="yq-timeline-mobile-status" aria-hidden="true">
+                    <div class="yq-timeline-mobile-status__row">
+                        <span class="yq-timeline-mobile-status__label">الحالة الحالية:</span>
+                        <strong class="yq-timeline-mobile-status__val">@currentStepLabel</strong>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(nextStepLabel))
+                    {
+                        <div class="yq-timeline-mobile-status__row">
+                            <span class="yq-timeline-mobile-status__label">التالي:</span>
+                            <span class="yq-timeline-mobile-status__val yq-timeline-mobile-status__val--next">@nextStepLabel</span>
+                        </div>
+                    }
+                </div>
+            }
+        </section>
+    }
+
+    <div class="yq-od-layout">
+
+        <!-- LEFT: DETAILS -->
+        <div class="yq-od-details yq-reveal">
+
+            <!-- 1. INLINE CONFLICT RESOLUTION (IF ACTIVE) -->
+            @if (isConflictAwaitingDecision && inventoryConflict != null)
+            {
+                ViewData["OrderId"] = Model.Id;
+                ViewData["ConflictHasPaymentReview"] = conflictHasPaymentReview;
+                @await Html.PartialAsync("_CustomerInventoryConflict", inventoryConflict)
+            }
+
+            <!-- 2. DELIVERY INFORMATION -->
+            <section class="yq-od-card yq-glass" aria-labelledby="yqDeliveryTitle">
+                <h2 id="yqDeliveryTitle" class="yq-od-card__title"><i class="bi bi-geo-alt" aria-hidden="true"></i> بيانات التوصيل والمستلم</h2>
+                <div class="yq-od-info-grid">
+                    <div>
+                        <span class="yq-od-info-label">اسم المستلم</span>
+                        <span class="yq-od-info-value">@recipientName</span>
+                    </div>
+                    <div>
+                        <span class="yq-od-info-label">رقم جوال المستلم</span>
+                        <span class="yq-od-info-value"><bdi dir="ltr">@recipientPhone</bdi></span>
+                    </div>
+                    <div>
+                        <span class="yq-od-info-label">المحافظة</span>
+                        <span class="yq-od-info-value">@(delivery?.Governorate ?? "-")</span>
+                    </div>
+                    <div>
+                        <span class="yq-od-info-label">المدينة</span>
+                        <span class="yq-od-info-value">@(delivery?.City ?? "-")</span>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(buyerName) && buyerName != recipientName)
+                    {
+                        <div>
+                            <span class="yq-od-info-label">صاحب الحساب</span>
+                            <span class="yq-od-info-value">@buyerName</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(buyerPhone) && buyerPhone != recipientPhone)
+                    {
+                        <div>
+                            <span class="yq-od-info-label">رقم هاتف الحساب</span>
+                            <span class="yq-od-info-value"><bdi dir="ltr">@buyerPhone</bdi></span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.Notes))
+                    {
+                        <div class="yq-od-info-item--full">
+                            <span class="yq-od-info-label">ملاحظات إضافية</span>
+                            <p class="yq-od-info-value yq-od-notes-text">@Model.Notes</p>
+                        </div>
+                    }
+                    <div>
+                        <span class="yq-od-info-label">آخر تحديث للحالة</span>
+                        <span class="yq-od-info-value"><bdi dir="ltr">@(Model.TimeState.HasValue ? Model.TimeState.Value.ToString("dd/MM/yyyy HH:mm") : "-")</bdi></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. ADMIN NOTE (PRESERVED SAFELY) -->
+            @if (!string.IsNullOrWhiteSpace(Model.AdminNote))
+            {
+                <section class="yq-od-card yq-glass" aria-labelledby="yqAdminNoteTitle">
+                    <h2 id="yqAdminNoteTitle" class="yq-od-card__title"><i class="bi bi-info-circle" aria-hidden="true"></i> ملاحظة الإدارة</h2>
+                    <p class="yq-od-admin-note-text">@Model.AdminNote</p>
+                </section>
+            }
+
+            <!-- 4. PAYMENT METHOD -->
+            <div class="yq-od-payment-card-wrapper">
+                @await Html.PartialAsync("_PaymentMethodCard", new PaymentMethodCardViewModel(
+                    paymentPresentation,
+                    paymentStateDescription,
+                    paymentStateKind))
+
+                @if (!string.IsNullOrWhiteSpace(Model.Receipturl))
+                {
+                    <div class="yq-payment-receipt-tag yq-glass">
+                        <i class="bi bi-paperclip" aria-hidden="true"></i>
+                        <span>تم إرفاق إيصال التحويل مع الطلب.</span>
+                    </div>
+                }
+            </div>
+
+            <!-- 5. PRODUCTS -->
+            <section class="yq-od-card yq-glass" aria-labelledby="yqProductsTitle">
+                <div class="yq-od-card__header-row">
+                    <h2 id="yqProductsTitle" class="yq-od-card__title"><i class="bi bi-bag-check" aria-hidden="true"></i> المنتجات المطلوبة</h2>
+                    <span class="yq-od-count-pill">@items.Sum(i => i.Quantity) قطع</span>
+                </div>
+                <div class="yq-od-products">
+                    @foreach (var item in items)
+                    {
+                        var lineTotal = item.Quantity * item.Unitprice;
+                        var sizeMl = item.RetailSizeMl ?? item.RetailPrice?.SizeMl;
+                        var sizeText = sizeMl.HasValue && sizeMl.Value > 0 ? $"{sizeMl.Value} مل" : null;
+
+                        <div class="yq-od-product">
+                            <a asp-controller="Products" asp-action="Details" asp-route-id="@item.Productid" class="yq-od-product__media">
+                                <img src="@(item.Product?.Imageurl ?? "/images/placeholder-product.svg")"
+                                     alt="@(item.Product?.Name ?? "صورة المنتج")"
+                                     data-yaqut-fallback="/images/placeholder-product.svg" />
+                            </a>
+                            <div class="yq-od-product__info">
+                                <a asp-controller="Products" asp-action="Details" asp-route-id="@item.Productid" class="yq-od-product__name">
+                                    @item.Product?.Name
+                                </a>
+                                <div class="yq-od-product__meta-line">
+                                    @if (!string.IsNullOrWhiteSpace(sizeText))
+                                    {
+                                        <span class="yq-od-variant-badge">@sizeText</span>
+                                    }
+                                    <span class="yq-od-product__qty">الكمية: @item.Quantity × <bdi>@(item.Unitprice.ToYaqutPrice())</bdi></span>
+                                </div>
+                                @if (item.UnavailableQuantity.HasValue && item.UnavailableQuantity.Value > 0)
+                                {
+                                    <div class="yq-od-product__stock-status yq-od-product__stock-status--warning">
+                                        <span>المتاح: @Math.Max(0, item.Quantity - item.UnavailableQuantity.Value)</span>
+                                        <span>غير المتوفر: @item.UnavailableQuantity</span>
+                                    </div>
+                                }
+                                @if (item.FulfilledQuantity.HasValue && item.FulfilledQuantity.Value != item.Quantity)
+                                {
+                                    <div class="yq-od-product__stock-status yq-od-product__stock-status--info">
+                                        <span>الكمية المنفذة: @item.FulfilledQuantity</span>
+                                    </div>
+                                }
+                            </div>
+                            <span class="yq-od-product__total">
+                                <bdi>@(lineTotal.ToYaqutPrice())</bdi>
+                            </span>
+                        </div>
+                    }
+                </div>
+            </section>
+        </div>
+
+        <!-- RIGHT: SUMMARY -->
+        <aside class="yq-od-summary yq-glass yq-reveal" aria-labelledby="yqSummaryTitle">
+            <h2 id="yqSummaryTitle" class="yq-od-summary__title">ملخص الطلب</h2>
+
+            <div class="yq-od-summary__row">
+                <span>عدد المنتجات</span>
+                <span>@items.Sum(i => i.Quantity)</span>
+            </div>
+            <div class="yq-od-summary__row">
+                <span>الشحن</span>
+                @await Html.PartialAsync("_FreeShipping")
+            </div>
+
+            <div class="yq-od-summary__divider"></div>
+
+            <div class="yq-od-summary__row yq-od-summary__row--total">
+                <span>إجمالي الطلب</span>
+                <span><bdi>@(Model.Totalamount.ToYaqutPrice())</bdi></span>
+            </div>
+            @if (Model.Finalfulfilledamount.HasValue && Model.Finalfulfilledamount.Value != Model.Totalamount)
+            {
+                <div class="yq-od-summary__row yq-od-summary__row--fulfilled">
+                    <span>المبلغ المعتمد للتنفيذ</span>
+                    <span><bdi>@(Model.Finalfulfilledamount.Value.ToYaqutPrice())</bdi></span>
+                </div>
+            }
+
+            <div class="yq-od-summary__actions">
+                <a asp-controller="Products" asp-action="Index" class="btn-yaqut-outline yq-od-summary__btn">
+                    <i class="bi bi-bag-plus" aria-hidden="true"></i> متابعة التسوق
+                </a>
+            </div>
+        </aside>
+    </div>
+</div>
+
+@await Html.PartialAsync("_YaqutOperationDialog")
+
+@section Scripts {
+    <script src="~/js/orders/details.js" asp-append-version="true"></script>
+    <script src="~/js/orders/conflict-resolution.js" asp-append-version="true"></script>
+}

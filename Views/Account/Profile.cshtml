@@ -1,0 +1,186 @@
+@model YAGOT_2._0.Models.ProfileVM
+@using System.Security.Claims
+@using YAGOT_2._0.Services
+@inject DealingAPI DealingApiService
+@{
+    ViewData["Title"] = "ملفي الشخصي | الكهرمان";
+    var isSuccess = TempData["ProfileSuccess"] != null;
+    var encryptedPhone = User.FindFirst(ClaimTypes.MobilePhone)?.Value;
+    string customerPhone = DealingApiService.DecryptPhone(encryptedPhone);
+    var displayPhone = string.IsNullOrWhiteSpace(customerPhone) ? "-" : customerPhone.Trim();
+    var roleLabel = Model.Role;
+    var joinDate = Model.CreatedAt.HasValue ? Model.CreatedAt.Value.ToString("dd/MM/yyyy") : "-";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/account/profile.css" asp-append-version="true" />
+}
+
+<div class="yq-profile">
+
+    <nav class="yq-page-breadcrumb yq-reveal" aria-label="مسار التصفح">
+        <a asp-controller="Home" asp-action="Index">الرئيسية</a>
+        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+        <span>ملفي الشخصي</span>
+    </nav>
+
+    <div class="yq-profile-hero yq-reveal">
+        <div class="yq-profile-hero__avatar-wrap">
+            <div class="yq-profile-hero__avatar">
+                <i class="bi bi-person-fill"></i>
+            </div>
+            <span class="yq-profile-hero__badge"><i class="bi bi-check-lg"></i></span>
+        </div>
+        <div class="yq-profile-hero__info">
+            <p class="yq-profile-hero__greeting">أهلاً وسهلاً</p>
+            <h1 class="yq-profile-hero__name">@Model.Name</h1>
+            <p class="yq-profile-hero__sub">إدارة معلومات حسابك الشخصي في الكهرمان</p>
+            <div class="yq-profile-hero__meta">
+                <span class="yq-profile-hero__chip">
+                    <i class="bi bi-shield-check"></i> @roleLabel
+                </span>
+                <span class="yq-profile-hero__chip">
+                    <i class="bi bi-calendar3"></i> انضم @joinDate
+                </span>
+            </div>
+        </div>
+    </div>
+
+    @if (isSuccess)
+    {
+        <div class="yq-profile-alert yq-profile-alert--success yq-reveal" role="alert">
+            <i class="bi bi-check-circle-fill"></i>
+            تم تحديث بياناتك بنجاح!
+        </div>
+    }
+
+    <div class="yq-profile-layout">
+
+        <section class="yq-profile-form-wrap yq-glass yq-reveal">
+            <h2 class="yq-profile-form__title">
+                <i class="bi bi-pencil-square"></i> تعديل البيانات
+            </h2>
+
+            <form asp-controller="Account" asp-action="Profile" method="post" data-yq-validate novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+
+                <div asp-validation-summary="ModelOnly" class="yaqut-alert yaqut-alert--danger"></div>
+
+                <div class="yaqut-form-group">
+                    <label asp-for="Name" class="yaqut-form-label">الاسم الكامل</label>
+                    <div class="yaqut-input-wrap">
+                        <i class="bi bi-person"></i>
+                        <input asp-for="Name" class="yaqut-form-input" placeholder="اسمك الكامل" required minlength="2" autocomplete="name" aria-describedby="ProfileNameValidation" />
+                    </div>
+                    <span asp-validation-for="Name" id="ProfileNameValidation" class="text-danger small"></span>
+                </div>
+
+                <div class="yaqut-form-group">
+                    <label asp-for="Email" class="yaqut-form-label">البريد الإلكتروني</label>
+                    <div class="yaqut-input-wrap">
+                        <i class="bi bi-envelope"></i>
+                        <input asp-for="Email" type="email" class="yaqut-form-input" readonly dir="ltr" aria-describedby="ProfileEmailValidation ProfileEmailHelp" />
+                    </div>
+                    <span asp-validation-for="Email" id="ProfileEmailValidation" class="text-danger small"></span>
+                    <small id="ProfileEmailHelp" class="yq-field-hint">تم توثيق البريد عبر Google ولا يمكن تغييره من الملف الشخصي.</small>
+                </div>
+
+                <div class="yaqut-form-group">
+                    <span class="yaqut-form-label">رقم الجوال</span>
+                    <div class="yaqut-input-wrap yaqut-input-wrap--disabled">
+                        <i class="bi bi-phone"></i>
+                        <span class="yq-checkout-info-value"><bdi dir="ltr">@displayPhone</bdi></span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-yaqut-gold yq-profile-submit-btn">
+                    <i class="bi bi-check-lg"></i> حفظ التغييرات
+                </button>
+            </form>
+        </section>
+
+        <aside class="yq-profile-sidebar">
+
+            <div class="yq-profile-stat-card yq-glass yq-reveal">
+                <p class="yq-profile-stat-card__title">معلومات الحساب</p>
+
+                <div class="yq-profile-stat-row">
+                    <div class="yq-profile-stat-icon">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <div>
+                        <div class="yq-profile-stat-label">نوع الحساب</div>
+                        <div class="yq-profile-stat-value">@roleLabel</div>
+                    </div>
+                    <span class="yq-profile-stat-badge">@roleLabel</span>
+                </div>
+
+                <div class="yq-profile-stat-row">
+                    <div class="yq-profile-stat-icon">
+                        <i class="bi bi-calendar3"></i>
+                    </div>
+                    <div>
+                        <div class="yq-profile-stat-label">تاريخ الانضمام</div>
+                        <div class="yq-profile-stat-value">@joinDate</div>
+                    </div>
+                </div>
+
+                <div class="yq-profile-stat-row">
+                    <div class="yq-profile-stat-icon">
+                        <i class="bi bi-phone"></i>
+                    </div>
+                    <div>
+                        <div class="yq-profile-stat-label">رقم الجوال</div>
+                        <div class="yq-profile-stat-value"><bdi dir="ltr">@displayPhone</bdi></div>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.Email))
+                {
+                    <div class="yq-profile-stat-row">
+                        <div class="yq-profile-stat-icon">
+                            <i class="bi bi-envelope"></i>
+                        </div>
+                        <div class="yq-min-w-0">
+                            <div class="yq-profile-stat-label">البريد الإلكتروني</div>
+                            <div class="yq-profile-stat-value yq-profile-email-text"><bdi dir="ltr">@Model.Email</bdi></div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <nav class="yq-profile-nav-card yq-glass yq-reveal">
+                <a asp-controller="Orders" asp-action="Index" class="yq-profile-nav-link">
+                    <i class="bi bi-receipt"></i>
+                    <span>طلباتي</span>
+                    <i class="bi bi-chevron-left yq-profile-chevron"></i>
+                </a>
+                <a asp-controller="Cart" asp-action="Index" class="yq-profile-nav-link">
+                    <i class="bi bi-bag"></i>
+                    <span>سلتي</span>
+                    <i class="bi bi-chevron-left yq-profile-chevron"></i>
+                </a>
+                <div class="yq-profile-nav-divider"></div>
+                <a asp-controller="Account" asp-action="RecoveryAccount" class="yq-profile-nav-link">
+                    <i class="bi bi-shield-lock"></i>
+                    <span>تغيير كلمة المرور</span>
+                    <i class="bi bi-chevron-left yq-profile-chevron"></i>
+                </a>
+                <div class="yq-profile-nav-divider"></div>
+                <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" asp-antiforgery="true">
+                    <button type="submit" class="yq-profile-nav-link yq-profile-nav-link--danger">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>تسجيل الخروج</span>
+                    </button>
+                </form>
+            </nav>
+
+        </aside>
+    </div>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

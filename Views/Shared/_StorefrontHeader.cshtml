@@ -1,0 +1,181 @@
+@{
+    var routeController = ViewContext.RouteData.Values["controller"] as string ?? string.Empty;
+    var routeAction = ViewContext.RouteData.Values["action"] as string ?? "Index";
+    var searchValue = Context.Request.Query["search"].ToString();
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var isAdmin = User.IsInRole("Admin") || User.IsInRole("Developer");
+
+    bool IsActive(string controller, string action = "Index")
+        => string.Equals(routeController, controller, StringComparison.OrdinalIgnoreCase)
+           && string.Equals(routeAction, action, StringComparison.OrdinalIgnoreCase);
+
+    var homeActive = IsActive("Home");
+    var productsActive = IsActive("Products");
+    var categoriesActive = IsActive("Categories");
+    var ordersActive = IsActive("Orders");
+    var cartActive = IsActive("Cart");
+    var profileActive = IsActive("Account", "Profile");
+}
+
+<div class="yaqut-announce" role="note" aria-label="مزايا التسوق">
+    <div class="yaqut-announce__inner">
+        <span><i class="bi bi-gem" aria-hidden="true"></i> الكهرمان للعطور الفاخرة</span>
+        <span><i class="bi bi-shield-check" aria-hidden="true"></i> تجربة تسوق آمنة</span>
+    </div>
+</div>
+
+<header class="yaqut-header" id="yaqutHeader">
+    <div class="yaqut-nav__backdrop" data-yq-nav-close tabindex="-1" aria-hidden="true"></div>
+    <div class="yaqut-header__inner">
+        <div class="yaqut-header__main">
+            <a class="yaqut-brand" asp-area="" asp-controller="Home" asp-action="Index" aria-label="الكهرمان - الصفحة الرئيسية">
+                <span class="yaqut-logo-wrap yaqut-logo-wrap--header">
+                    <img src="~/images/yaqut-logo.png" asp-append-version="true" alt="الكهرمان" class="yaqut-logo" />
+                </span>
+            </a>
+
+            <form asp-controller="Products" asp-action="Index" method="get" class="yaqut-search" role="search">
+                <i class="bi bi-search yaqut-search__icon" aria-hidden="true"></i>
+                <input type="search" name="search" id="yaqutSearchInput" class="yaqut-search__input"
+                       placeholder="ابحث عن عطر أو وصف..." value="@searchValue"
+                       autocomplete="off" aria-label="بحث عن منتج" />
+                <button type="submit" class="yaqut-search__btn" aria-label="بحث">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                </button>
+            </form>
+
+            <div class="yaqut-header__actions" role="group" aria-label="إجراءات المتجر">
+                <a asp-controller="Cart" asp-action="Index" class="yaqut-cart-link @(cartActive ? "is-active" : null)" aria-label="السلة" aria-controls="yqCartDrawer" aria-current="@(cartActive ? "page" : null)" title="السلة" id="yaqutHeaderCartLink" data-yq-cart-open>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="yaqut-cart-link__icon" viewBox="0 0 16 16" aria-hidden="true">
+                        <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .49.598l-1 5a.5.5 0 0 1-.465.401l-9.397.472L4.415 11H13a.5.5 0 0 1 0 1H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5M3.102 4l.84 4.479 9.144-.459L13.89 4zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4m7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4m-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2m7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+                    </svg>
+                    <span class="yaqut-cart-link__text d-none d-md-inline">السلة</span>
+                    @await Component.InvokeAsync("CartBadge")
+                </a>
+
+                @if (isAuthenticated)
+                {
+                    <a asp-controller="Account" asp-action="Profile" class="yaqut-user-chip @(profileActive ? "is-active" : null)" title="حسابي" aria-current="@(profileActive ? "page" : null)">
+                        <i class="bi bi-person-circle" aria-hidden="true"></i>
+                        <span>حسابي</span>
+                    </a>
+
+                    <a asp-controller="Orders" asp-action="Index" class="yaqut-orders-link @(ordersActive ? "is-active" : null)" aria-current="@(ordersActive ? "page" : null)">
+                        <i class="bi bi-receipt" aria-hidden="true"></i>
+                        <span>طلباتي</span>
+                    </a>
+
+                    @if (isAdmin)
+                    {
+                        <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="yaqut-admin-link">
+                            <i class="bi bi-speedometer2" aria-hidden="true"></i>
+                            <span>الإدارة</span>
+                        </a>
+                    }
+
+                    <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" asp-antiforgery="true" class="yaqut-logout-form">
+                        <button type="submit" class="yaqut-logout-btn" aria-label="تسجيل الخروج" title="تسجيل الخروج">
+                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                            <span>خروج</span>
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Auth" class="yaqut-login-btn">
+                        <i class="bi bi-person" aria-hidden="true"></i>
+                        <span>تسجيل الدخول</span>
+                    </a>
+                }
+
+                <div class="yaqut-theme-pill" role="group" aria-label="تبديل وضع الألوان">
+                    <button type="button" class="yaqut-theme-pill__btn" data-theme-opt="light" aria-label="الوضع الفاتح" title="فاتح">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-sun" viewBox="0 0 16 16" aria-hidden="true">
+                            <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708"/>
+                        </svg>
+                    </button>
+                    <button type="button" class="yaqut-theme-pill__btn" data-theme-opt="dark" aria-label="الوضع الداكن" title="داكن">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-moon-stars" viewBox="0 0 16 16" aria-hidden="true">
+                            <path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.79.79 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278M4.858 1.311A7.27 7.27 0 0 0 1.025 7.71c0 4.02 3.279 7.276 7.319 7.276a7.32 7.32 0 0 0 5.205-2.162q-.506.063-1.029.063c-4.61 0-8.343-3.714-8.343-8.29 0-1.167.242-2.278.681-3.286"/>
+                            <path d="M10.794 3.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387a1.73 1.73 0 0 0-1.097 1.097l-.387 1.162a.217.217 0 0 1-.412 0l-.387-1.162A1.73 1.73 0 0 0 9.21 6.594l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387a1.73 1.73 0 0 0 1.097-1.097zM13.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.16 1.16 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.16 1.16 0 0 0-.732-.732l-.774-.258a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <button type="button" class="yaqut-menu-toggle" aria-label="القائمة" aria-controls="yaqutNav" aria-expanded="false" data-yq-nav-toggle>
+                <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
+                </svg>
+            </button>
+        </div>
+
+        <nav class="yaqut-nav" id="yaqutNav" aria-label="التنقل الرئيسي">
+            <ul class="yaqut-nav__list yaqut-nav__list--primary">
+                <li>
+                    <a asp-controller="Home" asp-action="Index" class="@(homeActive ? "is-active" : null)" aria-current="@(homeActive ? "page" : null)">
+                        <i class="bi bi-house-door" aria-hidden="true"></i><span>الرئيسية</span>
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="Products" asp-action="Index" class="@(productsActive ? "is-active" : null)" aria-current="@(productsActive ? "page" : null)">
+                        <i class="bi bi-box-seam" aria-hidden="true"></i><span>المنتجات</span>
+                    </a>
+                </li>
+                <li>
+                    <a asp-controller="Categories" asp-action="Index" class="@(categoriesActive ? "is-active" : null)" aria-current="@(categoriesActive ? "page" : null)">
+                        <i class="bi bi-grid" aria-hidden="true"></i><span>التصنيفات</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="yaqut-nav__mobile">
+                <div class="yaqut-nav__section" role="group" aria-label="الحساب">
+                    @if (isAuthenticated)
+                    {
+                        <a asp-controller="Account" asp-action="Profile" class="@(profileActive ? "is-active" : null)" aria-current="@(profileActive ? "page" : null)">
+                            <i class="bi bi-person-circle" aria-hidden="true"></i><span>حسابي</span>
+                        </a>
+                        <a asp-controller="Orders" asp-action="Index" class="@(ordersActive ? "is-active" : null)" aria-current="@(ordersActive ? "page" : null)">
+                            <i class="bi bi-receipt" aria-hidden="true"></i><span>طلباتي</span>
+                        </a>
+                        @if (isAdmin)
+                        {
+                            <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                                <i class="bi bi-speedometer2" aria-hidden="true"></i><span>الإدارة</span>
+                            </a>
+                        }
+                        <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" asp-antiforgery="true" class="yaqut-nav__logout-form">
+                            <button type="submit" class="yaqut-nav__logout">
+                                <i class="bi bi-box-arrow-right" aria-hidden="true"></i><span>تسجيل الخروج</span>
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Auth">
+                            <i class="bi bi-person" aria-hidden="true"></i><span>تسجيل الدخول</span>
+                        </a>
+                    }
+                </div>
+
+                <div class="yaqut-nav__theme" role="group" aria-label="تبديل وضع الألوان">
+                    <span>الوضع</span>
+                    <div class="yaqut-theme-pill">
+                        <button type="button" class="yaqut-theme-pill__btn" data-theme-opt="light" aria-label="الوضع الفاتح" title="فاتح">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-sun" viewBox="0 0 16 16" aria-hidden="true">
+                                <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708"/>
+                            </svg>
+                        </button>
+                        <button type="button" class="yaqut-theme-pill__btn" data-theme-opt="dark" aria-label="الوضع الداكن" title="داكن">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-moon-stars" viewBox="0 0 16 16" aria-hidden="true">
+                                <path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.79.79 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278M4.858 1.311A7.27 7.27 0 0 0 1.025 7.71c0 4.02 3.279 7.276 7.319 7.276a7.32 7.32 0 0 0 5.205-2.162q-.506.063-1.029.063c-4.61 0-8.343-3.714-8.343-8.29 0-1.167.242-2.278.681-3.286"/>
+                                <path d="M10.794 3.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387a1.73 1.73 0 0 0-1.097 1.097l-.387 1.162a.217.217 0 0 1-.412 0l-.387-1.162A1.73 1.73 0 0 0 9.21 6.594l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387a1.73 1.73 0 0 0 1.097-1.097zM13.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.16 1.16 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.16 1.16 0 0 0-.732-.732l-.774-.258a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+</header>

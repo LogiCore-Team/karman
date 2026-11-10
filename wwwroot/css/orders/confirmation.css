@@ -1,0 +1,1100 @@
+/* ═══ Orders / Confirmation — V1 Responsive Order Success Experience ═══ */
+
+.yq-confirm-page {
+    max-width: 1140px;
+    margin: 1.25rem auto 3rem;
+    padding-inline: 1rem;
+}
+
+/* Shell isolation: suppress floating contact widget on confirmation page */
+.yq-confirm-page ~ .yq-contact-float,
+body:has(.yq-confirm-page) .yq-contact-float {
+    display: none !important;
+}
+
+/* ── Layout Grid ── */
+.yq-confirm-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.yq-confirm-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    min-width: 0;
+}
+
+.yq-confirm-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    min-width: 0;
+}
+
+@media (min-width: 992px) {
+    .yq-confirm-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    .yq-confirm-sidebar {
+        position: sticky;
+        top: 1.5rem;
+    }
+}
+
+/* ── Base Card ── */
+.yq-confirm-card {
+    padding: 1.5rem;
+    border-radius: var(--yq-radius, 18px);
+    border: 1px solid var(--yq-border-sub);
+    background: var(--yq-bg-elevated);
+    box-shadow: var(--yq-shadow);
+}
+
+.yq-confirm-card--danger {
+    border-color: color-mix(in srgb, #dc3545 35%, var(--yq-border-sub));
+    background: color-mix(in srgb, #dc3545 5%, var(--yq-bg-elevated));
+}
+
+.yq-confirm-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.yq-confirm-card__title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--yq-font-display);
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--yq-text);
+    margin: 0;
+}
+
+.yq-confirm-card__title i {
+    color: var(--yq-gold-dark, #96751f);
+    font-size: 1.15rem;
+}
+
+/* ── 1. Compact Success Hero ── */
+.yq-confirm-hero {
+    border-color: color-mix(in srgb, #168a52 32%, var(--yq-border-sub));
+    background: linear-gradient(145deg,
+        color-mix(in srgb, #168a52 7%, var(--yq-bg-elevated)),
+        var(--yq-bg-elevated));
+}
+
+.yq-confirm-hero__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.yq-confirm-hero__icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #168a52;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.45rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(22, 138, 82, 0.25);
+}
+
+.yq-confirm-hero__intro {
+    flex: 1;
+    min-width: 0;
+}
+
+.yq-confirm-hero__title {
+    font-family: var(--yq-font-display);
+    font-size: clamp(1.3rem, 3.2vw, 1.7rem);
+    font-weight: 850;
+    color: var(--yq-text);
+    margin: 0 0 0.35rem;
+    line-height: 1.3;
+}
+
+.yq-confirm-hero__sub {
+    color: var(--yq-text-soft);
+    font-size: 0.88rem;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.yq-confirm-refs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    margin-top: 1.25rem;
+    padding-top: 1.15rem;
+    border-top: 1px solid var(--yq-border-sub);
+}
+
+.yq-confirm-ref-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.65rem 1rem;
+    border-radius: var(--yq-radius-sm, 10px);
+    background: var(--yq-bg);
+    border: 1px solid var(--yq-border-sub);
+}
+
+.yq-confirm-ref-item--tracking {
+    flex: 1 1 auto;
+    min-width: 220px;
+}
+
+.yq-confirm-ref-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--yq-text-soft);
+    letter-spacing: 0.01em;
+}
+
+.yq-confirm-ref-value {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--yq-text);
+    font-family: var(--yq-font-body, 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.35;
+}
+
+.yq-confirm-order-id {
+    color: var(--yq-gold-dark, #8a6a16);
+    letter-spacing: 0.02em;
+}
+
+.yq-confirm-tracking-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.yq-confirm-tracking-code {
+    color: var(--yq-gold-dark, #8a6a16);
+    letter-spacing: 0.03em;
+    word-break: break-all;
+}
+
+.yq-confirm-copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.32rem 0.7rem;
+    border: 1px solid var(--yq-border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--yq-text-soft);
+    font-family: var(--yq-font-body, 'Tajawal', sans-serif);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: color var(--yq-ease), border-color var(--yq-ease), background var(--yq-ease);
+}
+
+.yq-confirm-copy-btn:hover {
+    border-color: var(--yq-gold);
+    color: var(--yq-gold-dark, #96751f);
+}
+
+.yq-confirm-copy-btn:focus-visible {
+    outline: 2px solid var(--yq-gold);
+    outline-offset: 2px;
+}
+
+.yq-confirm-copy-btn.is-copied {
+    border-color: #168a52;
+    color: #168a52;
+    background: color-mix(in srgb, #168a52 10%, transparent);
+}
+
+/* ── 2. Status & Next Steps ── */
+.yq-confirm-status-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.65rem;
+    flex-wrap: wrap;
+}
+
+.yq-confirm-status-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.yq-confirm-status-icon {
+    color: var(--yq-gold-dark, #96751f);
+    font-size: 1.1rem;
+}
+
+.yq-confirm-danger-icon {
+    color: #dc3545;
+    font-size: 1.1rem;
+}
+
+.yq-confirm-status-desc {
+    font-size: 0.88rem;
+    color: var(--yq-text-soft);
+    line-height: 1.65;
+    margin: 0 0 1.2rem;
+}
+
+.yq-confirm-next-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+}
+
+.yq-confirm-step {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.85rem;
+    border-radius: var(--yq-radius-sm, 10px);
+    border: 1px solid var(--yq-border-sub);
+    background: var(--yq-bg);
+}
+
+.yq-confirm-step.is-complete {
+    border-color: color-mix(in srgb, #168a52 30%, var(--yq-border-sub));
+}
+
+.yq-confirm-step.is-complete .yq-confirm-step__dot {
+    background: #168a52;
+    color: #fff;
+    border-color: transparent;
+}
+
+.yq-confirm-step.is-active {
+    border-color: color-mix(in srgb, var(--yq-gold) 40%, var(--yq-border-sub));
+    background: color-mix(in srgb, var(--yq-gold) 6%, var(--yq-bg-elevated));
+}
+
+.yq-confirm-step.is-active .yq-confirm-step__dot {
+    border-color: var(--yq-gold);
+    color: var(--yq-gold-dark, #96751f);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--yq-gold) 15%, transparent);
+}
+
+.yq-confirm-step__dot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1.5px solid var(--yq-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--yq-text-muted);
+    background: var(--yq-bg-elevated);
+    flex-shrink: 0;
+}
+
+.yq-confirm-step__content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.yq-confirm-step__name {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--yq-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.yq-confirm-step__hint {
+    font-size: 0.72rem;
+    color: var(--yq-text-soft);
+    line-height: 1.35;
+}
+
+/* ── 3. Purchased Products ── */
+.yq-confirm-count-pill {
+    font-family: var(--yq-font-body, 'Tajawal', sans-serif);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--yq-text-soft);
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    background: var(--yq-bg);
+    border: 1px solid var(--yq-border-sub);
+}
+
+.yq-confirm-products {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.yq-confirm-product {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.85rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--yq-border-sub);
+}
+
+.yq-confirm-product:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.yq-confirm-product__media {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--yq-radius-sm, 8px);
+    overflow: hidden;
+    background: var(--yq-bg);
+    flex-shrink: 0;
+    display: block;
+    border: 1px solid var(--yq-border-sub);
+}
+
+.yq-confirm-product__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.yq-confirm-product__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+}
+
+.yq-confirm-product__name {
+    font-size: 0.95rem;
+    font-weight: 750;
+    color: var(--yq-text);
+    text-decoration: none;
+    line-height: 1.45;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color var(--yq-ease);
+}
+
+.yq-confirm-product__name:hover {
+    color: var(--yq-gold-dark, #96751f);
+}
+
+.yq-confirm-product__meta-line {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: var(--yq-text-soft);
+}
+
+.yq-confirm-variant-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.5rem;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--yq-gold) 14%, transparent);
+    color: var(--yq-gold-dark, #8a6a16);
+    font-family: var(--yq-font-body, 'Tajawal', sans-serif);
+    font-size: 0.74rem;
+    font-weight: 750;
+    line-height: 1.2;
+}
+
+.yq-confirm-product__qty {
+    font-size: 0.8rem;
+    font-weight: 550;
+    color: var(--yq-text-soft);
+}
+
+.yq-confirm-product__qty bdi {
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.yq-confirm-product__total {
+    font-size: 0.98rem;
+    font-weight: 800;
+    color: var(--yq-text);
+    white-space: nowrap;
+    font-family: var(--yq-font-body, 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+    justify-self: end;
+}
+
+.yq-confirm-product__total bdi {
+    display: inline-block;
+    white-space: nowrap;
+}
+
+/* ── 4. Delivery Information ── */
+.yq-confirm-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem 1.25rem;
+    margin-top: 0.25rem;
+}
+
+.yq-confirm-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.yq-confirm-info-item--full {
+    grid-column: 1 / -1;
+}
+
+.yq-confirm-info-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--yq-text-soft);
+    letter-spacing: 0.01em;
+}
+
+.yq-confirm-info-value {
+    font-size: 0.92rem;
+    font-weight: 750;
+    color: var(--yq-text);
+    overflow-wrap: anywhere;
+    line-height: 1.45;
+}
+
+/* ── 5. Payment Card overrides ── */
+.yq-payment-card__state[data-kind="unpaid"] {
+    color: var(--yq-gold-dark, #7b5e16);
+    background: color-mix(in srgb, var(--yq-gold, #d4af37) 11%, transparent);
+}
+
+/* ── 6. Order Summary Card ── */
+.yq-confirm-summary__title {
+    font-family: var(--yq-font-display);
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--yq-text);
+    margin: 0 0 1.15rem;
+    letter-spacing: -0.01em;
+}
+
+.yq-confirm-summary__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--yq-text);
+    margin-bottom: 0.8rem;
+    line-height: 1.4;
+}
+
+.yq-confirm-summary__label {
+    color: var(--yq-text-soft);
+    font-weight: 550;
+    font-size: 0.88rem;
+}
+
+.yq-confirm-summary__value {
+    font-weight: 750;
+    font-size: 0.92rem;
+    color: var(--yq-text);
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+}
+
+.yq-confirm-summary__divider {
+    height: 1px;
+    background: var(--yq-border-sub);
+    margin: 0.95rem 0;
+}
+
+.yq-confirm-summary__row--total {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-block: 0.2rem;
+    margin-bottom: 1.15rem;
+}
+
+.yq-confirm-summary__total-label {
+    color: var(--yq-text);
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+
+.yq-confirm-summary__total-value {
+    color: var(--yq-gold-dark, #8a6a16);
+    font-family: var(--yq-font-body, 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+    font-size: 1.35rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    text-align: end;
+}
+
+.yq-confirm-summary__total-value bdi {
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.yq-confirm-summary__note {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    margin: 0;
+    padding-top: 0.95rem;
+    border-top: 1px solid var(--yq-border-sub);
+    font-size: 0.82rem;
+    color: var(--yq-text-soft);
+    line-height: 1.6;
+}
+
+.yq-confirm-summary__note i {
+    color: var(--yq-gold-dark, #96751f);
+    font-size: 0.95rem;
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+}
+
+/* ── 7. CTA Actions Group ── */
+.yq-confirm-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.yq-confirm-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 0.65rem 1rem;
+    border-radius: var(--yq-radius-sm, 10px);
+    font-size: 0.88rem;
+    font-weight: 800;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color var(--yq-ease), border-color var(--yq-ease), background var(--yq-ease), transform var(--yq-ease);
+    width: 100%;
+}
+
+.yq-confirm-btn:focus-visible {
+    outline: 2px solid var(--yq-gold);
+    outline-offset: 2px;
+}
+
+.yq-confirm-btn--primary {
+    color: #111;
+    background: var(--yq-gold-grad, var(--yq-gold));
+    border: none;
+    box-shadow: var(--yq-shadow-gold);
+}
+
+.yq-confirm-btn--primary:hover {
+    color: #000;
+    transform: translateY(-1px);
+}
+
+.yq-confirm-btn--secondary {
+    color: var(--yq-text);
+    background: transparent;
+    border: 1.5px solid var(--yq-border);
+}
+
+.yq-confirm-btn--secondary:hover {
+    border-color: var(--yq-gold);
+    color: var(--yq-gold-dark, #96751f);
+    transform: translateY(-1px);
+}
+
+.yq-confirm-btn--ghost {
+    color: var(--yq-text-soft);
+    background: transparent;
+    border: 1px dashed var(--yq-border);
+}
+
+.yq-confirm-btn--ghost:hover {
+    border-color: var(--yq-gold);
+    color: var(--yq-text);
+}
+
+/* ── 8. Secondary WhatsApp Support Card ── */
+.yq-confirm-support-card {
+    padding: 1rem 1.15rem;
+    border-radius: var(--yq-radius-sm, 12px);
+    border: 1px solid color-mix(in srgb, #168a52 30%, var(--yq-border-sub));
+    background: color-mix(in srgb, #168a52 6%, var(--yq-bg-elevated));
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.yq-confirm-support-card__header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+}
+
+.yq-confirm-support-card__icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: #fff;
+    background: #168a52;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.yq-confirm-support-card__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.yq-confirm-support-card__title {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--yq-text);
+    margin: 0;
+}
+
+.yq-confirm-support-card__desc {
+    font-size: 0.75rem;
+    color: var(--yq-text-soft);
+    margin: 0;
+    line-height: 1.45;
+}
+
+.yq-confirm-support-card__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    min-height: 38px;
+    padding: 0.5rem 0.85rem;
+    border-radius: var(--yq-radius-sm, 8px);
+    border: 1px solid #168a52;
+    color: #fff;
+    background: #168a52;
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-decoration: none;
+    transition: background var(--yq-ease), transform var(--yq-ease);
+    width: 100%;
+}
+
+.yq-confirm-support-card__btn:hover {
+    background: #126e41;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.yq-confirm-support-card__btn:focus-visible {
+    outline: 2px solid #168a52;
+    outline-offset: 2px;
+}
+
+.yq-confirm-support-card__ext {
+    font-size: 0.72rem;
+    opacity: 0.85;
+    margin-inline-start: auto;
+}
+
+/* ── Mobile Viewports (<576px) ── */
+@media (max-width: 575.98px) {
+    .yq-confirm-card {
+        padding: 1.15rem;
+    }
+
+    .yq-confirm-hero__head {
+        gap: 0.75rem;
+    }
+
+    .yq-confirm-hero__icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
+    }
+
+    .yq-confirm-refs {
+        flex-direction: column;
+    }
+
+    .yq-confirm-next-steps {
+        grid-template-columns: 1fr;
+        gap: 0.65rem;
+    }
+
+    .yq-confirm-info-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .yq-confirm-product {
+        grid-template-columns: 48px minmax(0, 1fr) auto;
+        gap: 0.75rem;
+    }
+
+    .yq-confirm-product__media {
+        width: 48px;
+        height: 48px;
+    }
+
+    .yq-confirm-product__name {
+        font-size: 0.9rem;
+    }
+
+    .yq-confirm-product__total {
+        font-size: 0.94rem;
+        text-align: end;
+        justify-self: end;
+    }
+
+    .yq-confirm-summary__row--total {
+        margin-bottom: 1rem;
+    }
+
+    .yq-confirm-summary__total-value {
+        font-size: 1.22rem;
+        text-align: end;
+    }
+}
+
+/* ── Dark Mode Readability & Contrast Enhancements ── */
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-ref-item {
+    background: rgba(255, 255, 255, 0.035);
+    border-color: rgba(255, 255, 255, 0.09);
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-ref-label,
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-info-label,
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-summary__label {
+    color: #b8b3be;
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-hero__sub {
+    color: #cfcad4;
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-status-desc {
+    color: #d6d1dc;
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-step {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-step__hint {
+    color: #b5afbd;
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-step__dot {
+    color: #b5afbd;
+    background: #181818;
+    border-color: rgba(255, 255, 255, 0.14);
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-product__qty,
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-count-pill {
+    color: #c2bcc8;
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-count-pill {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-info-value,
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-summary__value {
+    color: #f5f5f5;
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-order-id,
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-tracking-code {
+    color: var(--yq-gold-bright, #f0d878);
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-copy-btn {
+    color: #cfcad4;
+    border-color: rgba(255, 255, 255, 0.16);
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-copy-btn:hover {
+    color: var(--yq-gold-bright, #f0d878);
+    border-color: var(--yq-gold-bright, #f0d878);
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-variant-badge {
+    background: color-mix(in srgb, var(--yq-gold) 22%, transparent);
+    color: var(--yq-gold-bright, #f0d878);
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-summary__total-value {
+    color: var(--yq-gold-bright, #f0d878);
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-summary__note {
+    color: #c2bcc8;
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-confirm-support-card__desc {
+    color: #c0d8cb;
+}
+
+/* ── 9. Order Success Confirmation Modal ── */
+.yq-order-success-modal__content {
+    border: 1px solid var(--yq-glass-border, rgba(212, 175, 55, 0.25));
+    border-radius: var(--yq-radius, 18px);
+    background: var(--yq-bg-elevated, #ffffff);
+    color: var(--yq-text, #1a1a1a);
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.22);
+    overflow: hidden;
+}
+
+.yq-order-success-modal__header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--yq-border-sub, rgba(0, 0, 0, 0.08));
+    background: linear-gradient(135deg,
+        color-mix(in srgb, #168a52 8%, var(--yq-bg-elevated)),
+        var(--yq-bg-elevated));
+}
+
+.yq-order-success-modal__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.35rem;
+    color: #168a52;
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+.yq-order-success-modal__eyebrow i {
+    font-size: 0.95rem;
+}
+
+.yq-order-success-modal__title {
+    color: var(--yq-text);
+    font-family: var(--yq-font-display);
+    font-size: 1.35rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.yq-order-success-modal__body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    color: var(--yq-text-soft);
+    font-size: 0.95rem;
+    line-height: 1.7;
+}
+
+.yq-order-success-modal__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.yq-order-success-modal__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: var(--yq-radius-sm, 10px);
+    background: color-mix(in srgb, var(--yq-gold, #c5a059) 18%, transparent);
+    color: var(--yq-gold-dark, #8f6e2b);
+    font-weight: 800;
+    font-size: 0.85rem;
+}
+
+.yq-order-success-modal__items-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--yq-text-muted, #757575);
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.yq-order-success-modal__message {
+    margin: 0;
+    color: var(--yq-text);
+    font-size: 0.95rem;
+    line-height: 1.7;
+}
+
+.yq-order-success-modal__callout {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 1rem 1.15rem;
+    border-radius: var(--yq-radius-sm, 12px);
+    border: 1px solid color-mix(in srgb, #168a52 35%, var(--yq-border-sub));
+    background: color-mix(in srgb, #168a52 7%, var(--yq-bg-elevated));
+}
+
+.yq-order-success-modal__callout-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    color: #fff;
+    background: #168a52;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.yq-order-success-modal__callout-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.yq-order-success-modal__callout-title {
+    color: var(--yq-text);
+    font-size: 0.92rem;
+    font-weight: 800;
+}
+
+.yq-order-success-modal__callout-text {
+    margin: 0;
+    font-size: 0.86rem;
+    line-height: 1.6;
+    color: var(--yq-text-soft);
+}
+
+.yq-order-success-modal__actions {
+    padding: 1.1rem 1.5rem;
+    border-top: 1px solid var(--yq-border-sub, rgba(0, 0, 0, 0.08));
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.yq-order-success-modal__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 42px;
+    padding: 0.6rem 1.25rem;
+    border-radius: var(--yq-radius-sm, 10px);
+    font-size: 0.88rem;
+    font-weight: 800;
+    text-decoration: none;
+    transition: background var(--yq-ease), transform var(--yq-ease), box-shadow var(--yq-ease);
+}
+
+.yq-order-success-modal__btn--whatsapp {
+    background: #168a52;
+    border: 1px solid #168a52;
+    color: #ffffff;
+}
+
+.yq-order-success-modal__btn--whatsapp:hover {
+    background: #126e41;
+    border-color: #126e41;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.yq-order-success-modal__btn--whatsapp:focus-visible {
+    outline: 2px solid #168a52;
+    outline-offset: 2px;
+}
+
+.yq-order-success-modal__ext {
+    font-size: 0.72rem;
+    opacity: 0.85;
+    margin-inline-start: 0.2rem;
+}
+
+/* Dark mode adjustments */
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-order-success-modal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+    opacity: 0.75;
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-order-success-modal .btn-close:hover {
+    opacity: 1;
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-order-success-modal__order-badge {
+    background: color-mix(in srgb, var(--yq-gold) 25%, transparent);
+    color: var(--yq-gold-bright, #f0d878);
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-order-success-modal__eyebrow {
+    color: #38b475;
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-order-success-modal__callout-text {
+    color: #c0d8cb;
+}
+
+:is(.theme-dark, .dark-mode, [data-theme="dark"]) .yq-order-success-modal__items-count {
+    color: #a0a0a0;
+}
+
+@media (max-width: 575.98px) {
+    .yq-order-success-modal__actions {
+        flex-direction: column-reverse;
+        gap: 0.6rem;
+    }
+    .yq-order-success-modal__btn {
+        width: 100%;
+    }
+}
+
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+    .yq-confirm-btn,
+    .yq-confirm-copy-btn,
+    .yq-confirm-support-card__btn,
+    .yq-order-success-modal__btn {
+        transition: none !important;
+        transform: none !important;
+    }
+}

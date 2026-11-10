@@ -1,0 +1,22 @@
+## Visual Studio & .NET Build Artifacts
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Visual Studio Cache & Settings
+.vs/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.sln.docstates
+
+## Temporary / Scratch files
+scratch_error_page.html
+graphify-out/
+
+## OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini

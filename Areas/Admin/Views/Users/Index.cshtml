@@ -1,0 +1,167 @@
+@model YAGOT_2._0.Models.Admin.AdminUsersIndexViewModel
+@using Microsoft.AspNetCore.Mvc.ViewFeatures
+@{
+    ViewData["Title"] = "إدارة المستخدمين";
+    var users = Model.Users.Items;
+    var rowNumber = Model.Users.FirstItemNumber;
+    var pagerViewData = new ViewDataDictionary(ViewData)
+    {
+        ["RouteValues"] = new Dictionary<string, object?>(),
+        ["Action"] = "Index"
+    };
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/users.css" asp-append-version="true" />
+}
+
+<section class="yq-users-admin" aria-labelledby="usersPageTitle">
+    <header class="yq-users-hero">
+        <div class="yq-users-hero__content">
+            <span class="yq-users-eyebrow">دليل المستخدمين</span>
+            <h2 id="usersPageTitle"><i class="bi bi-people"></i> إدارة المستخدمين</h2>
+            <p>مراجعة حسابات المتجر وأدوارها الحالية ضمن لوحة إدارية واضحة وسريعة القراءة.</p>
+        </div>
+        <div class="yq-users-hero__meta" aria-label="إجمالي المستخدمين">
+            <span>إجمالي الحسابات</span>
+            <strong>@Model.TotalUsers</strong>
+        </div>
+    </header>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="yaqut-alert yq-admin-operation-feedback yaqut-alert--danger mb-3" role="alert">
+            <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+            <span>@TempData["ErrorMessage"]</span>
+        </div>
+    }
+    else if (TempData["SuccessMessage"] != null)
+    {
+        <div class="yaqut-alert yq-admin-operation-feedback yaqut-alert--success mb-3" role="status">
+            <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+            <span>@TempData["SuccessMessage"]</span>
+        </div>
+    }
+
+    <section class="yq-users-panel" aria-labelledby="usersTableTitle">
+        <div class="yq-users-panel__header">
+            <div>
+                <h3 id="usersTableTitle">سجل المستخدمين</h3>
+                <p>البيانات الأساسية لكل حساب مسجل وحالة النشاط والحظر.</p>
+            </div>
+        </div>
+
+        @if (users.Any())
+        {
+            <div class="yq-users-table-wrap">
+                <table class="yq-users-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">الاسم</th>
+                            <th scope="col">رقم الجوال</th>
+                            <th scope="col">الدور</th>
+                            <th scope="col">الحالة</th>
+                            <th scope="col">تاريخ التسجيل</th>
+                            <th scope="col">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in users)
+                        {
+                            <tr>
+                                <td data-label="#">
+                                    <span class="yq-users-row-number">@rowNumber</span>
+                                </td>
+                                <td data-label="الاسم">
+                                    <div class="yq-users-person">
+                                        <span class="yq-users-person__avatar" aria-hidden="true">
+                                            <i class="bi bi-person-fill"></i>
+                                        </span>
+                                        <strong>@user.Name</strong>
+                                    </div>
+                                </td>
+                                <td data-label="رقم الجوال">
+                                    <span class="yq-users-phone">
+                                        @(string.IsNullOrWhiteSpace(user.Phone) ? "غير متوفر" : user.Phone)
+                                    </span>
+                                </td>
+                                <td data-label="الدور">
+                                    @if (user.Role == "Admin")
+                                    {
+                                        <span class="yq-users-badge yq-users-badge--admin">مدير</span>
+                                    }
+                                    else if (user.Role == "Developer")
+                                    {
+                                        <span class="yq-users-badge yq-users-badge--developer">مطور</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="yq-users-badge yq-users-badge--customer">زبون</span>
+                                    }
+                                </td>
+                                <td data-label="الحالة">
+                                    @if (user.SearchNameSyncVersion == 1)
+                                    {
+                                        <span class="yq-users-badge yq-users-badge--blocked"> <i class="bi bi-slash-circle"></i> محظور </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="yq-users-badge yq-users-badge--active"> <i class="bi bi-check-circle"></i> نشط </span>
+                                    }
+                                </td>
+                                <td data-label="تاريخ التسجيل">
+                                    <time class="yq-users-date">@(user.Createdat.HasValue ? user.Createdat.Value.ToString("dd/MM/yyyy") : "-")</time>
+                                </td>
+                                <td data-label="الإجراءات">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <a asp-action="Details" asp-route-id="@user.Id" class="yq-users-detail-link" aria-label="عرض تفاصيل @user.Name">
+                                            <i class="bi bi-eye" aria-hidden="true"></i>
+                                            <span>التفاصيل</span>
+                                        </a>
+                                        <form asp-action="ToggleBlock" method="post" class="d-inline" data-yq-user-block-form data-yq-block-action="@(user.SearchNameSyncVersion == 1 ? "unblock" : "block")">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="userId" value="@user.Id" />
+                                            <input type="hidden" name="block" value="@(user.SearchNameSyncVersion == 1 ? "false" : "true")" />
+                                            <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                            @if (user.SearchNameSyncVersion == 1)
+                                            {
+                                                <button type="submit" class="yq-users-action-btn yq-users-action-btn--unblock yq-admin-action--success" title="إلغاء حظر هذا الحساب">
+                                                    <i class="bi bi-unlock-fill"></i>
+                                                    <span>إلغاء الحظر</span>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" class="yq-users-action-btn yq-users-action-btn--block yq-admin-action--destructive" title="حظر هذا الحساب">
+                                                    <i class="bi bi-slash-circle-fill"></i>
+                                                    <span>حظر</span>
+                                                </button>
+                                            }
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            rowNumber += 1;
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @await Html.PartialAsync("_AdminPager", Model.Users, pagerViewData)
+        }
+        else
+        {
+            <div class="yq-users-empty" role="status">
+                <i class="bi bi-person-x" aria-hidden="true"></i>
+                <h3>لا يوجد مستخدمون</h3>
+                <p>ستظهر الحسابات المسجلة هنا عند توفرها.</p>
+            </div>
+        }
+    </section>
+</section>
+
+@await Html.PartialAsync("_YaqutOperationDialog")
+
+@section Scripts {
+    <script src="~/js/admin/users/block.js" asp-append-version="true"></script>
+}

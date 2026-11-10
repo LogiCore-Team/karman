@@ -1,0 +1,247 @@
+@model YAGOT_2._0.Models.Admin.AdminDashboardViewModel
+
+@{
+    ViewData["Title"] = "لوحة التحكم";
+
+    var recentOrders = Model.RecentOrders;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/dashboard.css" asp-append-version="true" />
+}
+
+<section class="yq-dashboard" aria-labelledby="dashboardTitle">
+    <header class="yq-dashboard-hero">
+        <div class="yq-dashboard-hero__content">
+            <span class="yq-dashboard-eyebrow">نظرة إدارية عامة</span>
+            <h2 id="dashboardTitle">لوحة التحكم</h2>
+            <p>تابع مؤشرات المتجر، راجع أحدث الطلبات، وانتقل بسرعة إلى إجراءات الإدارة اليومية.</p>
+        </div>
+
+        <div class="yq-dashboard-hero__actions" aria-label="إجراءات سريعة">
+            <a asp-area="Admin" asp-controller="Products" asp-action="Create" class="btn-yaqut-gold">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                <span>إضافة منتج</span>
+            </a>
+            <a asp-area="Admin" asp-controller="Categories" asp-action="Create" class="btn-yaqut-outline">
+                <i class="bi bi-folder-plus" aria-hidden="true"></i>
+                <span>إضافة تصنيف</span>
+            </a>
+            <form asp-area="Admin" asp-controller="Dashboard" asp-action="TriggerManualSync" method="post" style="display:inline-flex;">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn-yaqut-outline" title="فحص ومزامنة قواعد البيانات">
+                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                    <span>مزامنة يدوية</span>
+                </button>
+            </form>
+        </div>
+    </header>
+
+    @if (TempData["MigrationNotice"] != null)
+    {
+        var isDanger = TempData["MigrationNoticeType"]?.ToString() == "danger";
+        <div class="yq-dashboard-panel" role="alert" style="padding: 1rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; border-color: @(isDanger ? "#dc3545" : "var(--yq-admin-gold, #b8942e)");">
+            <i class="bi @(isDanger ? "bi-exclamation-triangle-fill text-danger" : "bi-check-circle-fill text-success")" style="font-size: 1.2rem;"></i>
+            <span style="color: var(--yq-admin-text, #f8f5ee); font-weight: 600; font-size: 0.9rem;">@TempData["MigrationNotice"]</span>
+        </div>
+    }
+
+    @if (Model.MigrationStatus != null && !Model.MigrationStatus.IsAllSynchronized)
+    {
+        <div class="yq-dashboard-panel" style="padding: 1.25rem; border-right: 4px solid var(--yq-admin-gold, #b8942e); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;">
+            <div>
+                <span class="yq-dashboard-eyebrow" style="color: var(--yq-admin-gold-bright, #d4af37);">
+                    تنبيه الجاهزية: قواعد البيانات
+                </span>
+                <h4 style="margin: 0.2rem 0; color: var(--yq-admin-text, #f8f5ee); font-size: 1.05rem; font-weight: 700;">
+                    @(Model.MigrationStatus.PendingStoreMigrationsCount > 0 || Model.MigrationStatus.PendingUsersMigrationsCount > 0 ? "توجد ترقيات معلقة تحتاج إلى تطبيق" : "حالة عدم اتساق أو انقطاع اتصال بقواعد البيانات")
+                </h4>
+                <p style="margin: 0; color: var(--yq-admin-muted, #9e9b93); font-size: 0.82rem;">
+                    <span>المتجر: @(Model.MigrationStatus.IsStoreConnected ? (Model.MigrationStatus.PendingStoreMigrationsCount > 0 ? $"{Model.MigrationStatus.PendingStoreMigrationsCount} ترقية معلقة" : "محدثة ومتطابقة") : "غير متصل")</span>
+                    <span style="margin: 0 0.5rem;">•</span>
+                    <span>المستخدمين: @(Model.MigrationStatus.IsUsersConnected ? (Model.MigrationStatus.PendingUsersMigrationsCount > 0 ? $"{Model.MigrationStatus.PendingUsersMigrationsCount} ترقية معلقة" : (Model.MigrationStatus.IsUsersSchemaCompatible ? "محدثة ومتطابقة" : "المخطط بحاجة لمواءمة")) : "غير متصل")</span>
+                </p>
+            </div>
+            <form asp-area="Admin" asp-controller="Dashboard" asp-action="TriggerManualSync" method="post" style="display:inline-flex;">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn-yaqut-gold" @(Model.MigrationStatus.IsMigrationInProgress ? "disabled" : "")>
+                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                    <span>@(Model.MigrationStatus.IsMigrationInProgress ? "جاري الترقية..." : "مزامنة وترقية الآن")</span>
+                </button>
+            </form>
+        </div>
+    }
+
+    <section class="yq-dashboard-kpis" aria-label="مؤشرات الأداء">
+        <article class="yq-dashboard-kpi">
+            <span class="yq-dashboard-kpi__icon"><i class="bi bi-box-seam" aria-hidden="true"></i></span>
+            <div>
+                <p class="yq-dashboard-kpi__label">المنتجات</p>
+                <strong class="yq-dashboard-kpi__value">@Model.TotalProducts</strong>
+            </div>
+        </article>
+
+        <article class="yq-dashboard-kpi">
+            <span class="yq-dashboard-kpi__icon"><i class="bi bi-receipt" aria-hidden="true"></i></span>
+            <div>
+                <p class="yq-dashboard-kpi__label">الطلبات</p>
+                <strong class="yq-dashboard-kpi__value">@Model.TotalOrders</strong>
+            </div>
+        </article>
+
+        <article class="yq-dashboard-kpi">
+            <span class="yq-dashboard-kpi__icon"><i class="bi bi-people" aria-hidden="true"></i></span>
+            <div>
+                <p class="yq-dashboard-kpi__label">المستخدمون</p>
+                <strong class="yq-dashboard-kpi__value">@Model.TotalUsers</strong>
+            </div>
+        </article>
+
+        <article class="yq-dashboard-kpi yq-dashboard-kpi--success yq-dashboard-kpi--revenue">
+            <span class="yq-dashboard-kpi__icon"><i class="bi bi-cash-stack" aria-hidden="true"></i></span>
+            <div>
+                <p class="yq-dashboard-kpi__label">الإيرادات</p>
+                <strong class="yq-dashboard-kpi__value">@(Model.TotalRevenue.ToYaqutPrice())</strong>
+            </div>
+        </article>
+    </section>
+
+    <div class="yq-dashboard-grid">
+        <section class="yq-dashboard-panel yq-dashboard-panel--orders" aria-labelledby="recentOrdersTitle">
+            <div class="yq-dashboard-panel__header">
+                <div>
+                    <span class="yq-dashboard-eyebrow">آخر النشاط</span>
+                    <h3 id="recentOrdersTitle">أحدث الطلبات</h3>
+                </div>
+                <a asp-area="Admin" asp-controller="Orders" asp-action="Index" class="yq-dashboard-panel__link">
+                    عرض الكل
+                    <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                </a>
+            </div>
+
+            @if (recentOrders.Any())
+            {
+                <div class="yq-dashboard-table-wrap">
+                    <table class="yq-dashboard-orders">
+                        <thead>
+                            <tr>
+                                <th scope="col">رقم الطلب</th>
+                                <th scope="col">رقم التتبع</th>
+                                <th scope="col">الإجمالي</th>
+                                <th scope="col">الحالة</th>
+                                <th scope="col">التاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in recentOrders)
+                            {
+                                string stateAr = order.Status switch
+                                {
+                                    "Pending" => "قيد الانتظار",
+                                    "Paid" => "تم الدفع",
+                                    "Processed" => "قيد التجهيز",
+                                    "Shipped" => "تم الشحن",
+                                    "Delivered" => "تم التوصيل",
+                                    "Cancelled" => "ملغي",
+                                    _ => "غير معروف"
+                                };
+
+                                var statusClass = order.Status switch
+                                {
+                                    "Pending" => "yq-orders-badge--pending",
+                                    "Paid" => "yq-orders-badge--paid",
+                                    "Processed" => "yq-orders-badge--processed",
+                                    "Shipped" => "yq-orders-badge--shipped",
+                                    "Delivered" => "yq-orders-badge--delivered",
+                                    "Cancelled" => "yq-orders-badge--cancelled",
+                                    "Refunded" => "yq-orders-badge--cancelled",
+                                    _ => "yq-orders-badge--neutral"
+                                };
+
+                                <tr>
+                                    <td data-label="رقم الطلب"><strong>#@order.Id</strong></td>
+                                    <td data-label="رقم التتبع">@(string.IsNullOrWhiteSpace(order.Trackingnumber) ? "-" : order.Trackingnumber)</td>
+                                    <td data-label="الإجمالي">@(order.Totalamount.ToYaqutPrice())</td>
+                                    <td data-label="الحالة">
+                                        <span class="yq-orders-badge @statusClass">@stateAr</span>
+                                    </td>
+                                    <td data-label="التاريخ">@(order.Orderdate.HasValue ? order.Orderdate.Value.ToString("dd/MM/yyyy") : "-")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="yq-dashboard-empty" role="status">
+                    <i class="bi bi-receipt-cutoff" aria-hidden="true"></i>
+                    <h4>لا توجد طلبات بعد</h4>
+                    <p>ستظهر أحدث الطلبات هنا فور توفرها من النظام.</p>
+                </div>
+            }
+        </section>
+
+        <aside class="yq-dashboard-sidebar" aria-label="اختصارات الإدارة">
+            <section class="yq-dashboard-panel">
+                <div class="yq-dashboard-panel__header">
+                    <div>
+                        <span class="yq-dashboard-eyebrow">متابعة سريعة</span>
+                        <h3>حالة الطلبات</h3>
+                    </div>
+                </div>
+
+                <div class="yq-dashboard-metrics">
+                    <div class="yq-dashboard-metric">
+                        <span>قيد الانتظار</span>
+                        <strong>@Model.PendingOrders</strong>
+                    </div>
+                    <div class="yq-dashboard-metric">
+                        <span>تم الدفع</span>
+                        <strong>@Model.PaidOrders</strong>
+                    </div>
+                    <div class="yq-dashboard-metric">
+                        <span>قيد التنفيذ</span>
+                        <strong>@Model.ActiveOrders</strong>
+                    </div>
+                    <div class="yq-dashboard-metric">
+                        <span>تم الشحن</span>
+                        <strong>@Model.ShippedOrder</strong>
+                    </div>
+                    <div class="yq-dashboard-metric">
+                        <span>ملغي</span>
+                        <strong>@Model.CancelledOrder</strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="yq-dashboard-panel">
+                <div class="yq-dashboard-panel__header">
+                    <div>
+                        <span class="yq-dashboard-eyebrow">إجراءات</span>
+                        <h3>اختصارات العمل</h3>
+                    </div>
+                </div>
+
+                <nav class="yq-dashboard-actions" aria-label="اختصارات العمل">
+                    <a asp-area="Admin" asp-controller="Products" asp-action="Create">
+                        <span><i class="bi bi-plus-lg" aria-hidden="true"></i>إضافة منتج</span>
+                        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                    </a>
+                    <a asp-area="Admin" asp-controller="Categories" asp-action="Create">
+                        <span><i class="bi bi-folder-plus" aria-hidden="true"></i>إضافة تصنيف</span>
+                        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                    </a>
+                    <a asp-area="Admin" asp-controller="Orders" asp-action="Index">
+                        <span><i class="bi bi-receipt" aria-hidden="true"></i>إدارة الطلبات</span>
+                        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                    </a>
+                    <a asp-area="Admin" asp-controller="Products" asp-action="Index">
+                        <span><i class="bi bi-box-seam" aria-hidden="true"></i>إدارة المنتجات</span>
+                        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                    </a>
+                </nav>
+            </section>
+        </aside>
+    </div>
+</section>

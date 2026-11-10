@@ -1,0 +1,238 @@
+@model YAGOT_2._0.Services.ViewModels
+@{
+    ViewData["Title"] = "الرئيسية | الكهرمان";
+    ViewData["IsHomePage"] = true;
+
+    var categories = Model.Categories?.ToList() ?? new List<YAGOT_2._0.Models.Category>();
+    var newArrivals = Model.NewArrivals?.ToList() ?? new List<YAGOT_2._0.Models.Product>();
+    var heroSlides = Model.HeroSlides?.ToList() ?? new List<YAGOT_2._0.Models.Product>();
+    var bestSellingProducts = Model.BestSellingProducts?.ToList() ?? new List<YAGOT_2._0.Models.Product>();
+
+    var storeSettings = Model.StoreSettings ?? new YAGOT_2._0.Models.StoreSettings();
+    var heroTitle = !string.IsNullOrWhiteSpace(storeSettings.HeroMarketingText)
+        ? storeSettings.HeroMarketingText
+        : "متجر الكهرمان للعطور";
+    var heroDescription = !string.IsNullOrWhiteSpace(storeSettings.HeroMarketingDesc)
+        ? storeSettings.HeroMarketingDesc
+        : "اكتشف تشكيلة مختارة من العطور المميزة، بروائح أنيقة تناسب ذوقك وكل مناسبة.";
+    var heroDesc = heroDescription;
+    var configuredFeaturedCategory = storeSettings.FeaturedCategoryId.HasValue
+        ? categories.FirstOrDefault(category => category.Id == storeSettings.FeaturedCategoryId.Value)
+        : null;
+    var featuredCategory = configuredFeaturedCategory ?? categories.FirstOrDefault();
+    var brandNames = Model.Brands
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(brand => brand)
+        .ToList();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/home/index.css" asp-append-version="true" />
+}
+
+<div class="yq-home-page" data-yq-auth-clear="@(TempData["Success"] != null ? "true" : "false")">
+    <!-- HERO SECTION -->
+    <section class="yq-home-hero yq-home-hero--shopping yq-reveal" data-yq-hero-section>
+        <!-- خلفية السلايدر المتغيرة مع تأثير الضبابية -->
+        <div class="yq-home-hero__bg" aria-hidden="true" id="yqHeroBgFader">
+            @if (heroSlides.Any())
+            {
+                @for (var i = 0; i < heroSlides.Count; i++)
+                {
+                    var product = heroSlides[i];
+                    var slideImg = string.IsNullOrWhiteSpace(product.Imageurl)
+                        ? Url.Content("~/images/placeholder-product.svg")
+                        : (product.Imageurl.StartsWith("http", StringComparison.OrdinalIgnoreCase) || product.Imageurl.StartsWith("/")
+                            ? product.Imageurl
+                            : Url.Content("~/" + product.Imageurl.TrimStart('/')));
+                    <div class="yq-hero-bg-slide @(i == 0 ? "is-active" : "")" data-slide-index="@i">
+                        <img src="@slideImg" alt="" loading="@(i == 0 ? "eager" : "lazy")" />
+                        <div class="yq-hero-bg-overlay"></div>
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="yq-home-hero__inner">
+            <!-- النصوص والأزرار (الجانب الأيمن) -->
+            <div class="yq-home-hero__content">
+                <span class="yq-home-hero__eyebrow">
+                    <i class="bi bi-stars"></i> متجر الكهرمان
+                </span>
+                <h1 class="yq-home-hero__title">@heroTitle</h1>
+                <p class="yq-home-hero__desc">
+                    @heroDesc
+                </p>
+                <div class="yq-home-hero__actions">
+                    <a asp-controller="Products" asp-action="Index" class="btn-yaqut-gold btn-yaqut-gold--lg">
+                        <i class="bi bi-stars"></i> تصفح المنتجات
+                    </a>
+                    @if (featuredCategory != null)
+                    {
+                        <a asp-controller="Products" asp-action="Index"
+                           asp-route-categoryId="@featuredCategory.Id"
+                           class="btn-yaqut-outline btn-yaqut-outline--lg">
+                            <i class="bi bi-flower1"></i> استعرض الأقسام
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <!-- صورة المنتج المميز مع البطاقة والوهج (الجانب الأيسر) -->
+            @if (heroSlides.Any())
+            {
+                <div class="yq-home-hero__grand-product" id="yqHeroFader">
+                    <div class="yq-grand-product__glow"></div>
+                    @for (var i = 0; i < heroSlides.Count; i++)
+                    {
+                        var product = heroSlides[i];
+                        var productImg = string.IsNullOrWhiteSpace(product.Imageurl)
+                            ? Url.Content("~/images/placeholder-product.svg")
+                            : (product.Imageurl.StartsWith("http", StringComparison.OrdinalIgnoreCase) || product.Imageurl.StartsWith("/")
+                                ? product.Imageurl
+                                : Url.Content("~/" + product.Imageurl.TrimStart('/')));
+                        var tagBadge = (i % 3) == 0 ? "جديد" : ((i % 3) == 1 ? "مميز" : "فاخر");
+                        <div class="yq-grand-product__item @(i == 0 ? "is-active" : "")" data-slide-index="@i">
+                            <span class="yq-grand-product__tag">@tagBadge</span>
+                            <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="yq-grand-product__link" aria-label="عرض تفاصيل @product.Name">
+                                <img src="@productImg" alt="@product.Name" data-yaqut-fallback="/images/placeholder-product.svg" class="yq-grand-product__img" loading="@(i == 0 ? "eager" : "lazy")" />
+                            </a>
+                            <div class="yq-grand-product__badge">
+                                <span class="yq-grand-product__kicker">المنتج</span>
+                                <strong class="yq-grand-product__name">@product.Name</strong>
+                            </div>
+                        </div>
+                    }
+
+                    @if (heroSlides.Count > 1)
+                    {
+                        <div class="yq-grand-product__nav" aria-label="التحكم في الشرائح">
+                            <button type="button" class="yq-hero-nav-btn yq-hero-nav-btn--prev" data-yq-fader-prev aria-label="الصورة السابقة">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                            <div class="yq-hero-dots">
+                                @for (var i = 0; i < heroSlides.Count; i++)
+                                {
+                                    <button type="button" class="yq-hero-dot @(i == 0 ? "is-active" : "")" data-yq-fader-dot="@i" aria-label="الانتقال إلى الصورة @(i + 1)"></button>
+                                }
+                            </div>
+                            <button type="button" class="yq-hero-nav-btn yq-hero-nav-btn--next" data-yq-fader-next aria-label="الصورة التالية">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- سهم التمرير للأسفل -->
+        <div class="yq-home-hero__scroll" aria-hidden="true" role="button" tabindex="0" title="تمرير للأسفل">
+            <i class="bi bi-chevron-down"></i>
+        </div>
+    </section>
+
+    @if (brandNames.Any())
+    {
+        <section class="container yq-home-brands" aria-label="الشركات المنتجة">
+            <div class="yq-home-brands__viewport">
+                <div class="yq-home-brands__track">
+                    <div class="yq-home-brands__group">
+                        @foreach (var brand in brandNames)
+                        {
+                            <a asp-controller="Products" asp-action="Index" asp-route-brand="@brand" class="yq-home-brand">@brand</a>
+                        }
+                    </div>
+                    @for (int i = 1; i < 6; i++)
+                    {
+                        <div class="yq-home-brands__group" aria-hidden="true">
+                            @foreach (var brand in brandNames)
+                            {
+                                <a asp-controller="Products" asp-action="Index" asp-route-brand="@brand" class="yq-home-brand" tabindex="-1">@brand</a>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+
+
+
+    <section class="container yq-home-section" aria-labelledby="newArrivalsTitle">
+        <header class="yq-home-section__head">
+            <div>
+                <span class="yq-home-kicker">مختار بعناية</span>
+                <h2 id="newArrivalsTitle" class="yq-home-section__title">وصل حديثاً</h2>
+                <p class="yq-home-section__sub">أحدث الإصدارات التي انضمت إلى مجموعة الكهرمان</p>
+            </div>
+            <a asp-controller="Products" asp-action="Index" class="yq-home-section__link">عرض الكل <i class="bi bi-arrow-left"></i></a>
+        </header>
+
+        @if (newArrivals.Any())
+        {
+            <div class="yq-home-product-rail" tabindex="0" aria-label="منتجات وصلت حديثاً">
+                @foreach (var product in newArrivals)
+                {
+                    <partial name="_ProductCard" model="product" />
+                }
+            </div>
+        }
+        else
+        {
+            <div class="yq-home-empty"><i class="bi bi-droplet"></i><p>لا توجد عطور معروضة حالياً. عُد قريباً لاكتشاف الجديد.</p></div>
+        }
+    </section>
+
+    @if (bestSellingProducts.Count >= 3)
+    {
+        <section class="container yq-home-section" aria-labelledby="bestSellersTitle">
+            <header class="yq-home-section__head">
+                <div>
+                    <span class="yq-home-kicker"><i class="bi bi-fire text-warning"></i> الأكثر طلباً</span>
+                    <h2 id="bestSellersTitle" class="yq-home-section__title">الأكثر مبيعاً</h2>
+                    <p class="yq-home-section__sub">العطور الأكثر اختياراً وإقبالاً من قِبل عملائنا</p>
+                </div>
+                <a asp-controller="Products" asp-action="Index" class="yq-home-section__link">عرض الكل <i class="bi bi-arrow-left"></i></a>
+            </header>
+            <div class="yq-home-product-rail" tabindex="0" aria-label="المنتجات الأكثر مبيعاً">
+                @foreach (var product in bestSellingProducts)
+                {
+                    <partial name="_ProductCard" model="product" />
+                }
+            </div>
+        </section>
+    }
+
+    @if (categories.Any())
+    {
+        <section class="container yq-home-section" aria-labelledby="categoriesTitle">
+            <header class="yq-home-section__head">
+                <div>
+                    <span class="yq-home-kicker">اعثر على عطرك</span>
+                    <h2 id="categoriesTitle" class="yq-home-section__title">التصنيفات</h2>
+                    <p class="yq-home-section__sub">استكشف التصنيفات المنسّقة حسب ذوقك</p>
+                </div>
+                <a asp-controller="Categories" asp-action="Index" class="yq-home-section__link">عرض الكل <i class="bi bi-arrow-left"></i></a>
+            </header>
+            <div class="yq-home-categories" aria-label="تصنيفات العطور">
+                @foreach (var category in categories)
+                {
+                    var categoryImage = string.IsNullOrWhiteSpace(category.Imageurl)
+                        ? Url.Content("~/images/placeholder-product.svg")
+                        : (category.Imageurl.StartsWith("http", StringComparison.OrdinalIgnoreCase) || category.Imageurl.StartsWith("/")
+                            ? category.Imageurl
+                            : Url.Content("~/" + category.Imageurl.TrimStart('/')));
+                    <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@category.Id" class="yq-home-category">
+                        <img src="@categoryImage" alt="@category.Name" loading="lazy" decoding="async"
+                             data-yaqut-fallback="/images/placeholder-product.svg" />
+                        <span><strong>@category.Name</strong><i class="bi bi-arrow-left" aria-hidden="true"></i></span>
+                    </a>
+                }
+            </div>
+        </section>
+    }
+</div>
+
+@section Scripts {
+    <script src="~/js/home/index.js" asp-append-version="true"></script>
+}

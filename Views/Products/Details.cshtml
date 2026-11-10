@@ -1,0 +1,445 @@
+@model YAGOT_2._0.Models.Product
+@using YAGOT_2._0.Services
+@{
+    ViewData["Title"] = Model?.Name;
+    ViewData["Description"] = Model?.Description?.Trim();
+    var desc = Model?.Description ?? "";
+    var parts = desc.Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+    var topNote    = parts.Length > 0 ? parts[0] : "";
+    var heartNote  = parts.Length > 1 ? parts[1] : (parts.Length == 1 ? parts[0] : "");
+    var baseNote   = parts.Length > 2 ? parts[2] : "";
+    var hasNotes   = parts.Length >= 2;
+    var isMlProduct = Model?.StockUnit == "Ml" && Model.VolumeMl is > 0;
+    var pieceAvailableUnits = Model?.Stockquantity ?? 0;
+    var fullAvailableUnits = isMlProduct ? (int)Math.Floor((double)Model!.Stockquantity / Model.VolumeMl!.Value) : pieceAvailableUnits;
+    var retailPrices = Model is null ? [] : ProductRetailAvailability.GetCustomerUsablePrices(Model);
+    var firstSellableRetailPrice = Model is null
+        ? null
+        : retailPrices.FirstOrDefault(price => Model.Stockquantity / price.SizeMl >= 1);
+    int? selectedRetailPriceId = fullAvailableUnits > 0 ? null : firstSellableRetailPrice?.Id;
+    var initialAvailableUnits = selectedRetailPriceId.HasValue && firstSellableRetailPrice is not null
+        ? Model!.Stockquantity / firstSellableRetailPrice.SizeMl
+        : fullAvailableUnits;
+    var initialPrice = selectedRetailPriceId.HasValue && firstSellableRetailPrice is not null
+        ? firstSellableRetailPrice.Price
+        : Model?.Price ?? 0;
+    var inStock = Model != null && ProductRetailAvailability.IsSellable(Model);
+    var unitOne = isMlProduct ? "عبوة واحدة" : "قطعة واحدة";
+    var unitTwo = isMlProduct ? "عبوتان" : "قطعتان";
+    var unitFew = isMlProduct ? "عبوات" : "قطع";
+    var unitMany = isMlProduct ? "عبوة" : "قطعة";
+    var availableStockText = initialAvailableUnits switch
+    {
+        0 => "غير متوفر",
+        1 => unitOne,
+        2 => unitTwo,
+        >= 3 and <= 10 => $"{initialAvailableUnits:N0} {unitFew}",
+        _ => $"{initialAvailableUnits:N0} {unitMany}"
+    };
+    var lowStock = initialAvailableUnits is > 0 and <= 5;
+    var lowStockMessage = $"المتوفر حاليًا {availableStockText} فقط";
+    var productImageUrl = Url.Content("~/images/placeholder-product.svg");
+    if (!string.IsNullOrWhiteSpace(Model?.Imageurl))
+    {
+        var candidateImageUrl = Model.Imageurl.Trim();
+        if (Uri.TryCreate(candidateImageUrl, UriKind.Absolute, out var absoluteImageUri))
+        {
+            if (absoluteImageUri.Scheme == Uri.UriSchemeHttp || absoluteImageUri.Scheme == Uri.UriSchemeHttps)
+            {
+                productImageUrl = candidateImageUrl;
+            }
+        }
+        else
+        {
+            var localImageUrl = candidateImageUrl.Replace('\\', '/').TrimStart('/');
+            while (localImageUrl.StartsWith("./", StringComparison.Ordinal))
+            {
+                localImageUrl = localImageUrl[2..];
+            }
+
+            var pathEnd = localImageUrl.IndexOfAny(new[] { '?', '#' });
+            var localImagePath = pathEnd >= 0 ? localImageUrl[..pathEnd] : localImageUrl;
+            var decodedLocalPath = Uri.UnescapeDataString(localImagePath).Replace('\\', '/');
+            var hasParentSegment = decodedLocalPath.Split('/', StringSplitOptions.RemoveEmptyEntries).Contains("..");
+            if (!string.IsNullOrWhiteSpace(localImagePath) &&
+                !localImagePath.Contains(':') &&
+                !hasParentSegment)
+            {
+                productImageUrl = Url.Content("~/" + localImageUrl);
+            }
+        }
+    }
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/products/details.css" asp-append-version="true" />
+}
+
+@if (Model != null)
+{
+    <div class="yq-pdp"
+         data-yq-product-details
+         data-id="@Model.Id"
+         data-name="@Model.Name"
+         data-price="@Model.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+         data-image="@productImageUrl">
+
+        <!-- BREADCRUMB -->
+        <nav class="yq-page-breadcrumb yq-reveal mb-4" aria-label="مسار التصفح">
+            <a asp-controller="Home" asp-action="Index">الرئيسية</a>
+            <i class="bi bi-chevron-left" aria-hidden="true"></i>
+            <a asp-controller="Products" asp-action="Index">المنتجات</a>
+            @if (Model.Category != null)
+            {
+                <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@Model.Category.Id">@Model.Category.Name</a>
+            }
+            <i class="bi bi-chevron-left" aria-hidden="true"></i>
+            <span>@Model.Name</span>
+        </nav>
+
+        <!-- MAIN PRODUCT AREA -->
+        <div class="yq-pdp-main">
+
+            <!-- GALLERY -->
+            <div class="yq-pdp-gallery yq-reveal">
+                <div class="yq-pdp-gallery__frame">
+                    <div class="yq-pdp-gallery__glow"></div>
+                    @if (inStock)
+                    {
+                        <span class="yq-pdp-gallery__badge">
+                            <i class="bi bi-stars"></i> متوفر
+                        </span>
+                    }
+                    <img src="@productImageUrl"
+                         alt="@Model.Name"
+                         class="yq-pdp-gallery__img"
+                         fetchpriority="high"
+                         data-yaqut-fallback="/images/placeholder-product.svg" />
+                </div>
+            </div>
+
+            <!-- INFO -->
+            <div class="yq-pdp-info yq-reveal">
+                <div class="yq-pdp-info__sticky">
+
+                    <div class="yq-pdp-meta-tags">
+                        @if (Model.Category != null)
+                        {
+                            <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@Model.Category.Id" class="yq-pdp-category" title="تصفح جميع منتجات هذا التصنيف">
+                                <i class="bi bi-flower2"></i> @Model.Category.Name
+                            </a>
+                        }
+                        
+                        @if (!string.IsNullOrWhiteSpace(Model.Brand))
+                        {
+                            <a asp-controller="Products" asp-action="Index" asp-route-brand="@Model.Brand" class="yq-pdp-brand-tag" title="تصفح جميع منتجات هذه الشركة">
+                                <i class="bi bi-building"></i> @Model.Brand
+                            </a>
+                        }
+                    </div>
+
+                    <h1 class="yq-pdp-title">@Model.Name</h1>
+
+                    <div class="yq-pdp-price-row">
+                        <div class="yq-pdp-price">
+                            @(initialPrice.ToYaqutPrice())
+                        </div>
+                        <!-- WISHLIST BUTTON -->
+                        <button type="button"
+                                class="yq-pdp-wishlist"
+                                id="yqWishlistBtn"
+                                data-product-id="@Model.Id"
+                                aria-label="إضافة إلى المفضلة"
+                                title="إضافة إلى المفضلة">
+                            <i class="bi bi-heart" id="yqWishlistIcon"></i>
+                        </button>
+                    </div>
+
+                    <div class="yq-pdp-stock" role="status" aria-atomic="true">
+                        @if (inStock)
+                        {
+                            <span class="yq-pdp-stock__badge yq-pdp-stock__badge--in" data-yq-stock-badge>
+                                <i class="bi bi-check-circle-fill" data-yq-stock-icon></i>
+                                <span data-yq-stock-label>متوفر في المخزون</span>
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="yq-pdp-stock__badge yq-pdp-stock__badge--out" data-yq-stock-badge>
+                                <i class="bi bi-x-circle-fill" data-yq-stock-icon></i>
+                                <span data-yq-stock-label>غير متوفر حالياً</span>
+                            </span>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(desc) && !hasNotes)
+                    {
+                        <p class="yq-pdp-summary">@(parts.Length > 0 ? parts[0] : desc)</p>
+                    }
+
+                    @if (inStock)
+                    {
+                        <form asp-controller="Cart"
+                              asp-action="Add"
+                              method="post"
+                              class="yq-pdp-purchase"
+                              data-yq-add-to-cart-form
+                              data-product-id="@Model.Id"
+                              data-product-name="@Model.Name">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="productId" value="@Model.Id" />
+                            <input type="hidden" name="retailPriceId" id="yqRetailPriceId" value="@selectedRetailPriceId" />
+
+                            @if (retailPrices.Count > 0)
+                            {
+                                <fieldset class="yq-pdp-retail-options" aria-label="اختيار الحجم">
+                                    <legend class="yq-pdp-qty__label">الحجم</legend>
+                                    <label class="yq-pdp-retail-option">
+                                        <input type="radio" name="retailChoice" value=""
+                                               checked="@(!selectedRetailPriceId.HasValue)"
+                                               data-price="@Model.Price"
+                                               data-max="@fullAvailableUnits"
+                                               data-unit-one="عبوة واحدة"
+                                               data-unit-two="عبوتان"
+                                               data-unit-few="عبوات"
+                                               data-unit-many="عبوة" />
+                                        <span class="yq-pdp-retail-option__body">
+                                            <span>@(Model.VolumeMl.HasValue ? $"عبوة كاملة {Model.VolumeMl} مل" : "عبوة كاملة")</span>
+                                            <strong>@(Model.Price.ToYaqutPrice())</strong>
+                                        </span>
+                                    </label>
+
+                                        @foreach (var price in retailPrices)
+                                        {
+                                            <label class="yq-pdp-retail-option">
+                                                <input type="radio" name="retailChoice" value="@price.Id"
+                                                       checked="@(selectedRetailPriceId == price.Id)"
+                                                       data-price="@price.Price"
+                                                       data-max="@(Model.Stockquantity / price.SizeMl)"
+                                                       data-unit-one="عبوة واحدة"
+                                                       data-unit-two="عبوتان"
+                                                       data-unit-few="عبوات"
+                                                       data-unit-many="عبوة" />
+                                                <span class="yq-pdp-retail-option__body">
+                                                    <span>@price.SizeMl مل</span>
+                                                    <strong>@(price.Price.ToYaqutPrice())</strong>
+                                                </span>
+                                            </label>
+                                        }
+                                </fieldset>
+                            }
+
+                            <p class="yq-pdp-qty__availability"
+                               data-yq-low-stock-message
+                               hidden="@(!lowStock)">
+                                <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                                <span>@lowStockMessage</span>
+                            </p>
+
+                            <div class="yq-pdp-action-row">
+                                <div class="yq-pdp-qty">
+                                    <span class="yq-cart-item__qty-label">الكمية</span>
+                                    <div class="yq-cart-item__qty-control">
+                                        <select class="yq-cart-item__qty-select"
+                                                id="yqQtySelect"
+                                                aria-label="الكمية المطلوبة"
+                                                disabled="@(initialAvailableUnits == 0)">
+                                            @for (var quantityOption = 1; quantityOption <= Math.Min(initialAvailableUnits, 10); quantityOption++)
+                                            {
+                                                <option value="@quantityOption">@quantityOption</option>
+                                            }
+                                            @if (initialAvailableUnits > 10)
+                                            {
+                                                <option value="custom">أكثر من 10 (10+)</option>
+                                            }
+                                        </select>
+                                        <input type="number" name="quantity" id="yqQtyInput" value="1"
+                                               min="1" max="@initialAvailableUnits"
+                                               data-yq-unit-one="@unitOne"
+                                               disabled="@(initialAvailableUnits == 0)"
+                                               class="yq-cart-item__qty-input d-none"
+                                               aria-label="الكمية المطلوبة" />
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn-yaqut-gold yq-pdp-add-btn" data-yq-add-button
+                                        disabled="@(initialAvailableUnits == 0)" aria-disabled="@(initialAvailableUnits == 0 ? "true" : "false")">
+                                    <i class="bi bi-bag-plus" aria-hidden="true"></i>
+                                    <span data-yq-add-label>إضافة للسلة</span>
+                                </button>
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <p class="yq-pdp-stock-state" role="status">
+                            <i class="bi bi-x-circle" aria-hidden="true"></i> نفد من المخزون
+                        </p>
+                    }
+
+                    <!-- TRUST STRIP: Only Authenticity -->
+                    <div class="yq-pdp-trust">
+                        <span><i class="bi bi-patch-check-fill"></i> عطر أصيل 100%</span>
+                        <span><i class="bi bi-award-fill"></i> جودة مضمونة</span>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- FRAGRANCE DETAILS SECTION -->
+        <div class="yq-pdp-details-section yq-reveal">
+
+            @if (hasNotes)
+            {
+                <!-- SCENT JOURNEY (replaces "الهرم العطري") -->
+                <div class="yq-pdp-scent-journey">
+                    <div class="yq-pdp-scent-journey__header">
+                        <i class="bi bi-wind"></i>
+                        <h2>رحلة العطر</h2>
+                        <p>كيف يتطور العطر على بشرتك منذ اللحظة الأولى</p>
+                    </div>
+                    <div class="yq-pdp-scent-notes">
+                        <div class="yq-pdp-note yq-pdp-note--top">
+                            <div class="yq-pdp-note__icon-wrap">
+                                <i class="bi bi-sunrise-fill"></i>
+                            </div>
+                            <div class="yq-pdp-note__body">
+                                <span class="yq-pdp-note__stage">النفحة الأولى</span>
+                                <span class="yq-pdp-note__time"><i class="bi bi-clock"></i> أول 15 دقيقة</span>
+                                <p class="yq-pdp-note__text">@topNote</p>
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(heartNote))
+                        {
+                            <div class="yq-pdp-note__connector"><i class="bi bi-arrow-down"></i></div>
+                            <div class="yq-pdp-note yq-pdp-note--heart">
+                                <div class="yq-pdp-note__icon-wrap">
+                                    <i class="bi bi-heart-fill"></i>
+                                </div>
+                                <div class="yq-pdp-note__body">
+                                    <span class="yq-pdp-note__stage">قلب العطر</span>
+                                    <span class="yq-pdp-note__time"><i class="bi bi-clock"></i> من 30 دقيقة إلى 3 ساعات</span>
+                                    <p class="yq-pdp-note__text">@heartNote</p>
+                                </div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(baseNote))
+                        {
+                            <div class="yq-pdp-note__connector"><i class="bi bi-arrow-down"></i></div>
+                            <div class="yq-pdp-note yq-pdp-note--base">
+                                <div class="yq-pdp-note__icon-wrap">
+                                    <i class="bi bi-moon-stars-fill"></i>
+                                </div>
+                                <div class="yq-pdp-note__body">
+                                    <span class="yq-pdp-note__stage">البصمة الدائمة</span>
+                                    <span class="yq-pdp-note__time"><i class="bi bi-clock"></i> تبقى على البشرة لساعات</span>
+                                    <p class="yq-pdp-note__text">@baseNote</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- PRODUCT INFO GRID (replaces "المواصفات" and "الوصف") -->
+            <div class="yq-pdp-info-grid">
+                @if (!string.IsNullOrWhiteSpace(desc))
+                {
+                    <div class="yq-pdp-info-card yq-pdp-info-card--desc">
+                        <div class="yq-pdp-info-card__icon"><i class="bi bi-quote"></i></div>
+                        <h3>عن هذا العطر</h3>
+                        <p>@(hasNotes ? string.Join(" — ", parts) : desc)</p>
+                    </div>
+                }
+                <div class="yq-pdp-info-card">
+                    <div class="yq-pdp-info-card__icon"><i class="bi bi-list-check"></i></div>
+                    <h3>تفاصيل المنتج</h3>
+                    <ul class="yq-pdp-quick-specs">
+                        @if (Model.Category != null)
+                        {
+                            <li>
+                                <span class="yq-pdp-quick-specs__key"><i class="bi bi-tag"></i> التصنيف</span>
+                                <span class="yq-pdp-quick-specs__val">@Model.Category.Name</span>
+                            </li>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.Brand))
+                        {
+                            <li>
+                                <span class="yq-pdp-quick-specs__key"><i class="bi bi-building"></i> الشركة</span>
+                                <span class="yq-pdp-quick-specs__val">
+                                    <a asp-controller="Products" asp-action="Index" asp-route-search="@Model.Brand" class="yq-brand-link">@Model.Brand</a>
+                                </span>
+                            </li>
+                        }
+                        <li>
+                            <span class="yq-pdp-quick-specs__key"><i class="bi bi-box-seam"></i> الحالة</span>
+                            <span class="yq-pdp-quick-specs__val @(inStock ? "text-green" : "text-red")" data-yq-stock-state-text>
+                                @(inStock ? "متوفر" : "نفذت الكمية")
+                            </span>
+                        </li>
+                        @if (inStock)
+                        {
+                            <li>
+                                <span class="yq-pdp-quick-specs__key"><i class="bi bi-layers"></i> المتوفر</span>
+                                <span class="yq-pdp-quick-specs__val yq-available-stock-text">@availableStockText</span>
+                            </li>
+                        }
+                        <li>
+                            <span class="yq-pdp-quick-specs__key"><i class="bi bi-currency-exchange"></i> السعر</span>
+                            <span class="yq-pdp-quick-specs__val yq-pdp-quick-specs__val--gold" data-yq-details-price>@(initialPrice.ToYaqutPrice())</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RECENTLY VIEWED -->
+        <section class="yq-pdp-recent yq-reveal" id="yqRecentlyViewed" hidden>
+            <header class="yq-pdp-recent__head">
+                <h2><i class="bi bi-clock-history"></i> شاهدته مؤخراً</h2>
+            </header>
+            <div class="yq-pdp-recent__grid" id="yqRecentlyViewedGrid"></div>
+        </section>
+
+        @if (inStock)
+        {
+            <!-- STICKY ADD TO CART (MOBILE ONLY) -->
+            <div class="yq-pdp-sticky-bar"
+                 data-yq-pdp-sticky-bar
+                 aria-hidden="true">
+                <div class="yq-pdp-sticky-bar__inner">
+                    <div class="yq-pdp-sticky-bar__price" data-yq-sticky-price>
+                        @(initialPrice.ToYaqutPrice())
+                    </div>
+                    <button type="button"
+                            class="btn-yaqut-gold yq-pdp-sticky-bar__btn"
+                            data-yq-sticky-add-btn
+                            tabindex="-1"
+                            aria-label="إضافة المنتج للسلة بالسعر المحدد"
+                            disabled="@(initialAvailableUnits == 0)"
+                            aria-disabled="@(initialAvailableUnits == 0 ? "true" : "false")">
+                        <i class="bi bi-bag-plus" aria-hidden="true"></i>
+                        <span>إضافة للسلة</span>
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="yaqut-empty yq-glass">
+        <i class="bi bi-exclamation-circle yaqut-empty__icon"></i>
+        <p class="yaqut-empty__text">نعتذر، لم يتم العثور على المنتج المطلوب.</p>
+        <a asp-action="Index" class="btn-yaqut-gold mt-3">العودة للمنتجات</a>
+    </div>
+}
+
+@await Html.PartialAsync("_YaqutOperationDialog")
+
+@section Scripts {
+    <script src="~/js/products/details.js" asp-append-version="true"></script>
+}

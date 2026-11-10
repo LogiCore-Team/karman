@@ -1,0 +1,144 @@
+.yq-operation-dialog {
+    width: min(92vw, 34rem);
+    padding: 0;
+    border: 0;
+    border-radius: 1.25rem;
+    color: var(--yq-text, #2b1720);
+    background: transparent;
+}
+
+.yq-operation-dialog::backdrop { background: color-mix(in srgb, var(--yq-bg, #14080d) 68%, transparent); backdrop-filter: blur(3px); }
+.yq-operation-dialog__panel { position: relative; padding: 1.5rem; border: 1px solid var(--yq-border, rgb(130 26 70 / 18%)); border-radius: 1.25rem; background: var(--yq-bg-elevated, #fffafc); box-shadow: var(--yq-shadow, 0 1.5rem 4rem rgb(42 10 24 / 30%)); }
+.yq-operation-dialog__close { position: absolute; inset: .8rem auto auto .8rem; display: inline-grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 0; border-radius: 50%; background: transparent; color: inherit; }
+.yq-operation-dialog h2 { margin: 0 0 .55rem; font-size: 1.25rem; }
+.yq-operation-dialog p { margin: 0; line-height: 1.8; white-space: pre-line; }
+.yq-operation-dialog__whatsapp-note { margin-top: 1rem !important; color: var(--yq-text-soft, #5a5a5a); font-size: .9rem; }
+.yq-operation-dialog__lines { margin: 1rem 0 0; padding-inline-start: 1.25rem; line-height: 1.8; }
+.yq-operation-dialog__actions { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; margin-top: 1.25rem; }
+
+.yq-operation-dialog__button {
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    width: auto;
+    min-height: 2.65rem;
+    align-items: center;
+    justify-content: center;
+    gap: .45rem;
+    overflow: hidden;
+    padding: .62rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font: inherit;
+    font-size: .88rem;
+    font-weight: 800;
+    line-height: 1.25;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color .22s ease, background-color .22s ease, border-color .22s ease, transform .22s ease;
+}
+
+.yq-operation-dialog__button:disabled {
+    cursor: not-allowed;
+    opacity: .5;
+}
+
+.yq-operation-dialog__button--primary {
+    border-color: transparent;
+    color: #111 !important;
+    background: var(--yq-btn-gold-grad);
+}
+
+.yq-operation-dialog__button--secondary {
+    border-color: var(--yq-border, rgb(130 26 70 / 22%));
+    color: var(--yq-text, #2b1720);
+    background: transparent;
+}
+
+.yq-operation-dialog__button--destructive {
+    border-color: #b42318;
+    color: #fff;
+    background: #b42318;
+}
+
+.yq-operation-dialog__button--whatsapp {
+    border-color: #168a52;
+    color: #fff;
+    background: #168a52;
+}
+
+.yq-operation-dialog__button:focus,
+.yq-operation-dialog__close:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.yq-operation-dialog .yq-operation-dialog__button:focus-visible,
+.yq-operation-dialog .yq-operation-dialog__close:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--yq-gold, #b8942e) 55%, transparent);
+    outline-offset: 3px;
+}
+
+.yq-operation-dialog__button > i,
+.yq-operation-dialog__close > i {
+    outline: none;
+    box-shadow: none;
+}
+
+/* WhatsApp hover text correction */
+.yq-operation-dialog__button--whatsapp:hover {
+    color: #fff;
+}
+
+.yq-operation-dialog__input-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    margin-top: 1rem;
+}
+
+.yq-operation-dialog__textarea {
+    width: 100%;
+    padding: .75rem 1rem;
+    border: 1px solid var(--yq-border, rgb(130 26 70 / 22%));
+    border-radius: .75rem;
+    background: var(--yq-bg, #fff);
+    color: var(--yq-text, #2b1720);
+    font: inherit;
+    font-size: .95rem;
+    line-height: 1.6;
+    resize: vertical;
+    outline: none;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.theme-dark .yq-operation-dialog__textarea,
+.dark-mode .yq-operation-dialog__textarea,
+[data-theme="dark"] .yq-operation-dialog__textarea {
+    background: var(--yq-bg, #120a10);
+    color: var(--yq-text, #f5eef2);
+    border-color: var(--yq-border, rgb(255 255 255 / 14%));
+}
+
+.yq-operation-dialog__textarea:focus {
+    border-color: var(--yq-gold, #b8942e);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--yq-gold, #b8942e) 25%, transparent);
+}
+
+.yq-operation-dialog__counter {
+    font-size: .8rem;
+    color: var(--yq-text-soft, #777);
+    text-align: left;
+    direction: ltr;
+}
+
+@media (max-width: 575.98px) {
+    .yq-operation-dialog__panel { padding: 1.25rem; }
+    .yq-operation-dialog__actions { display: grid; grid-template-columns: 1fr; }
+    .yq-operation-dialog__button { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .yq-operation-dialog__button { transition: none; }
+}

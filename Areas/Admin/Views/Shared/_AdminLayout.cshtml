@@ -1,0 +1,290 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using YAGOT_2._0.Integration.SiteState
+@using YAGOT_2._0.Services.Integration
+@inject ISiteAccessDecisionService SiteDecisionService
+@{
+    var storefrontDecision = await SiteDecisionService.DecideAsync(SiteAccessSurface.Storefront, User);
+    var isStorefrontAllowed = storefrontDecision.IsAllowed;
+}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="yaqut-admin-root">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - لوحة إدارة الكهرمان</title>
+    <link rel="icon" type="image/svg+xml" href="~/images/شعار الكهرمان.svg" asp-append-version="true" />
+    <link rel="apple-touch-icon" href="~/images/yaqut-logo.png" asp-append-version="true" />
+    <link rel="manifest" href="~/site.webmanifest" asp-append-version="true" />
+    <meta name="theme-color" content="#d4af37" />
+    <script nonce="@Context.Items["csp-nonce"]">
+        (function () {
+            var theme;
+            try { theme = window.localStorage.getItem('yaqut-theme'); } catch (error) { }
+            if (theme !== 'dark' && theme !== 'light') {
+                theme = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            var root = document.documentElement;
+            var isDark = theme === 'dark';
+            root.setAttribute('data-theme', theme);
+            root.classList.toggle('dark-mode', isDark);
+            root.classList.toggle('theme-dark', isDark);
+            root.classList.toggle('theme-light', !isDark);
+        })();
+    </script>
+    <link rel="stylesheet" href="~/fonts/font-delivery.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/yaqut-theme.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin/layout.css" asp-append-version="true" />
+    <script src="~/js/yaqut-main.js" asp-append-version="true" defer></script>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="yaqut-admin-body">
+    @{
+        var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+        var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+        bool IsActive(string controller, string action = "")
+        {
+            if (!string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase))
+                return false;
+            if (string.IsNullOrEmpty(action))
+                return true;
+            return string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase);
+        }
+        var pageTitle = ViewData["Title"]?.ToString() ?? "لوحة التحكم";
+    }
+
+    <a class="yq-admin-skip-link" href="#yqAdminContent">تخطي إلى المحتوى</a>
+
+    <div class="yq-admin-shell" id="yqAdminShell">
+
+        <!-- SIDEBAR -->
+        <aside class="yq-admin-sidebar" id="yqAdminSidebar" aria-label="القائمة الجانبية للإدارة">
+            <div class="yq-admin-sidebar__head">
+                <a class="yq-admin-brand" asp-area="Admin" asp-controller="Dashboard" asp-action="Index" aria-label="Yaqoot admin dashboard">
+                    <span class="yq-admin-brand__mark">
+                        <img src="~/images/yaqut-logo.png" asp-append-version="true" alt="الكهرمان" class="yq-admin-brand__logo" />
+                    </span>
+                    <span class="yq-admin-brand__text">
+                        <strong>الكهرمان</strong>
+                        <small>لوحة الإدارة</small>
+                    </span>
+                </a>
+                <button type="button" class="yq-admin-sidebar__collapse" id="yqSidebarCollapseBtn"
+                        aria-controls="yqAdminSidebar" aria-expanded="true"
+                        aria-label="طي القائمة الجانبية" title="طي/توسيع القائمة">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-layout-sidebar-inset" viewBox="0 0 16 16" aria-hidden="true">
+                        <path d="M14 2a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zM2 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2z"/>
+                        <path d="M3 4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="yq-admin-nav" aria-label="التنقل في لوحة الإدارة">
+
+                <div class="yq-admin-nav__group">
+                    <span class="yq-admin-nav__group-label">نظرة عامة</span>
+                    <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index"
+                       class="yq-admin-nav__link @(IsActive("Dashboard") ? "is-active" : "")"
+                       aria-current="@(IsActive("Dashboard") ? "page" : null)" title="لوحة التحكم">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>لوحة التحكم</span>
+                    </a>
+                    <a asp-area="Admin" asp-controller="QuickSales" asp-action="Index"
+                       class="yq-admin-nav__link @(IsActive("QuickSales") && !IsActive("QuickSales", "Reports") ? "is-active" : "")"
+                       aria-current="@(IsActive("QuickSales") && !IsActive("QuickSales", "Reports") ? "page" : null)" title="البيع السريع (POS)">
+                        <i class="bi bi-lightning-charge-fill text-warning"></i>
+                        <span>البيع السريع (POS)</span>
+                    </a>
+                    <a asp-area="Admin" asp-controller="QuickSales" asp-action="Reports"
+                       class="yq-admin-nav__link @(IsActive("QuickSales", "Reports") ? "is-active" : "")"
+                       aria-current="@(IsActive("QuickSales", "Reports") ? "page" : null)" title="تقارير POS">
+                        <i class="bi bi-bar-chart-line-fill text-info"></i>
+                        <span>تقارير POS</span>
+                    </a>
+                </div>
+
+                <div class="yq-admin-nav__group">
+                    <span class="yq-admin-nav__group-label">الكتالوج</span>
+                    <a asp-area="Admin" asp-controller="Products" asp-action="Index"
+                       class="yq-admin-nav__link @(IsActive("Products") ? "is-active" : "")"
+                       aria-current="@(IsActive("Products") ? "page" : null)" title="المنتجات">
+                        <i class="bi bi-box-seam"></i>
+                        <span>المنتجات</span>
+                    </a>
+                    <a asp-area="Admin" asp-controller="Categories" asp-action="Index"
+                       class="yq-admin-nav__link @(IsActive("Categories") ? "is-active" : "")"
+                       aria-current="@(IsActive("Categories") ? "page" : null)" title="التصنيفات">
+                        <i class="bi bi-tags"></i>
+                        <span>التصنيفات</span>
+                    </a>
+                </div>
+
+                <div class="yq-admin-nav__group">
+                    <span class="yq-admin-nav__group-label">المبيعات</span>
+                    <a asp-area="Admin" asp-controller="Orders" asp-action="Index"
+                       class="yq-admin-nav__link @(IsActive("Orders") ? "is-active" : "")"
+                       aria-current="@(IsActive("Orders") ? "page" : null)" title="الطلبات">
+                        <i class="bi bi-receipt"></i>
+                        <span>الطلبات</span>
+                    </a>
+                </div>
+
+                <div class="yq-admin-nav__group">
+                    <span class="yq-admin-nav__group-label">المستخدمون</span>
+                    <a asp-area="Admin" asp-controller="Users" asp-action="Index"
+                       class="yq-admin-nav__link @(IsActive("Users") ? "is-active" : "")"
+                       aria-current="@(IsActive("Users") ? "page" : null)" title="المستخدمين">
+                        <i class="bi bi-people"></i>
+                        <span>المستخدمين</span>
+                    </a>
+                </div>
+
+                <div class="yq-admin-nav__group">
+                    <span class="yq-admin-nav__group-label">النظام</span>
+                    <a asp-area="Admin" asp-controller="Settings" asp-action="Index"
+                       class="yq-admin-nav__link @(IsActive("Settings") ? "is-active" : "")"
+                       aria-current="@(IsActive("Settings") ? "page" : null)" title="الإعدادات">
+                        <i class="bi bi-gear"></i>
+                        <span>الإعدادات</span>
+                    </a>
+                </div>
+
+            </nav>
+
+            <div class="yq-admin-sidebar__foot">
+                @if (isStorefrontAllowed)
+                {
+                    <a asp-area="" asp-controller="Home" asp-action="Index" class="yq-admin-back-store" title="العودة للمتجر">
+                        <i class="bi bi-box-arrow-in-left"></i>
+                        <span>العودة للمتجر</span>
+                    </a>
+                }
+                else
+                {
+                    <a href="javascript:void(0)" class="yq-admin-back-store" data-bs-toggle="modal" data-bs-target="#storeDevModal" title="العودة للمتجر">
+                        <i class="bi bi-box-arrow-in-left"></i>
+                        <span>العودة للمتجر</span>
+                    </a>
+                }
+            </div>
+        </aside>
+
+        <!-- MOBILE OVERLAY -->
+        <div class="yq-admin-overlay" id="yqAdminOverlay" hidden></div>
+
+        <!-- MAIN COLUMN -->
+        <div class="yq-admin-main">
+
+            <!-- TOPBAR -->
+            <header class="yq-admin-topbar">
+                <button type="button" class="yq-admin-topbar__menu-btn" id="yqAdminMenuBtn"
+                        aria-label="فتح القائمة" aria-controls="yqAdminSidebar" aria-expanded="false">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
+                    </svg>
+                </button>
+
+                <div class="yq-admin-topbar__titles">
+                    <nav class="yq-admin-breadcrumb" aria-label="مسار التصفح">
+                        <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">الإدارة</a>
+                        @await RenderSectionAsync("Breadcrumb", required: false)
+                    </nav>
+                    <h1 class="yq-admin-topbar__title">@pageTitle</h1>
+                    <p class="yq-admin-topbar__subtitle">مساحة إدارة عمليات الكهرمان</p>
+                </div>
+
+                <div class="yq-admin-topbar__actions">
+                    <div class="yaqut-theme-pill" role="group" aria-label="تبديل وضع الألوان">
+                        <button type="button" class="yaqut-theme-pill__btn" data-theme-opt="light" aria-label="الوضع الصباحي" title="وضع النهار">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-sun" viewBox="0 0 16 16" aria-hidden="true">
+                                <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708"/>
+                            </svg>
+                        </button>
+                        <button type="button" class="yaqut-theme-pill__btn" data-theme-opt="dark" aria-label="الوضع المسائي" title="وضع الليل">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-moon-stars" viewBox="0 0 16 16" aria-hidden="true">
+                                <path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.79.79 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278M4.858 1.311A7.27 7.27 0 0 0 1.025 7.71c0 4.02 3.279 7.276 7.319 7.276a7.32 7.32 0 0 0 5.205-2.162q-.506.063-1.029.063c-4.61 0-8.343-3.714-8.343-8.29 0-1.167.242-2.278.681-3.286"/>
+                                <path d="M10.794 3.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387a1.73 1.73 0 0 0-1.097 1.097l-.387 1.162a.217.217 0 0 1-.412 0l-.387-1.162A1.73 1.73 0 0 0 9.21 6.594l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387a1.73 1.73 0 0 0 1.097-1.097zM13.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.16 1.16 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.16 1.16 0 0 0-.732-.732l-.774-.258a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732z"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="yq-admin-user" id="yqAdminUserMenu">
+                        <button type="button" class="yq-admin-user__trigger" id="yqAdminUserTrigger" aria-haspopup="true" aria-expanded="false">
+                            <span class="yq-admin-user__avatar">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-person-fill" viewBox="0 0 16 16" aria-hidden="true">
+                                    <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+                                </svg>
+                            </span>
+                            <span class="yq-admin-user__meta d-none d-md-flex">
+                                <strong>@User.Identity?.Name</strong>
+                                <small>@(User.IsInRole("Developer") ? "مطور" : "مدير")</small>
+                            </span>
+                            <i class="bi bi-chevron-down yq-admin-user__caret"></i>
+                        </button>
+                        <div class="yq-admin-user__dropdown" id="yqAdminUserDropdown">
+                            <a asp-area="" asp-controller="Account" asp-action="Profile">
+                                <i class="bi bi-person-circle"></i> ملفي الشخصي
+                            </a>
+                            @if (isStorefrontAllowed)
+                            {
+                                <a asp-area="" asp-controller="Home" asp-action="Index">
+                                    <i class="bi bi-shop"></i> عرض المتجر
+                                </a>
+                            }
+                            else
+                            {
+                                <a href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#storeDevModal">
+                                    <i class="bi bi-shop"></i> عرض المتجر
+                                </a>
+                            }
+                            <hr />
+                            <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" asp-antiforgery="true" class="yq-admin-user__logout-form">
+                                <button type="submit" class="yq-admin-user__logout">
+                                    <i class="bi bi-box-arrow-right"></i> تسجيل الخروج
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- PAGE CONTENT -->
+            <main class="yq-admin-content" id="yqAdminContent" tabindex="-1">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    @if (!isStorefrontAllowed)
+    {
+        <!-- Modal تنبيه وضع التطوير للأدمن -->
+        <div class="modal fade" id="storeDevModal" tabindex="-1" aria-labelledby="storeDevModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content text-center shadow-lg" style="border-radius: 16px;">
+                    <div class="modal-header border-0 pb-0 justify-content-end">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                    </div>
+                    <div class="modal-body py-3 text-center">
+                        <div class="mb-3">
+                            <span class="d-inline-flex p-3 rounded-circle bg-warning bg-opacity-10 text-warning fs-1">
+                                <i class="bi bi-tools"></i>
+                            </span>
+                        </div>
+                        <h5 class="fw-bold mb-2" id="storeDevModalLabel">المتجر في وضع التطوير</h5>
+                        <p class="text-secondary mb-0">الموقع حالياً في وضع التطوير، ولا يمكن تصفح واجهة المتجر.</p>
+                    </div>
+                    <div class="modal-footer border-0 pt-0 pb-4 justify-content-center">
+                        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">حسناً</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
+    <script src="~/js/admin/ajax-response.js" asp-append-version="true"></script>
+    <script src="~/js/admin/layout.js" asp-append-version="true"></script>
+    <script src="~/js/checkout-draft-storage.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

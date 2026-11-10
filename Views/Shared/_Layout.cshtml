@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    @{
+        const string defaultDescription = "الكهرمان للعطور الفاخرة - اكتشف منتجاتنا من أرقى العطور الشرقية والغربية في المملكة.";
+        var pageDescription = ViewData["Description"] as string;
+        var metaDescription = string.IsNullOrWhiteSpace(pageDescription)
+            ? defaultDescription
+            : pageDescription.Trim();
+    }
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="@metaDescription" />
+    <title>@ViewData["Title"] - الكهرمان</title>
+    <link rel="icon" type="image/svg+xml" href="~/images/favicon.svg" asp-append-version="true" />
+    <link rel="apple-touch-icon" href="~/images/yaqut-logo.png" asp-append-version="true" />
+    <link rel="manifest" href="~/site.webmanifest" asp-append-version="true" />
+    <meta name="theme-color" content="#d4af37" />
+    <script nonce="@Context.Items["csp-nonce"]">
+        (function () {
+            var theme;
+            try { theme = window.localStorage.getItem('yaqut-theme'); } catch (error) { }
+            if (theme !== 'dark' && theme !== 'light') {
+                theme = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            var root = document.documentElement;
+            var isDark = theme === 'dark';
+            root.setAttribute('data-theme', theme);
+            root.classList.toggle('dark-mode', isDark);
+            root.classList.toggle('theme-dark', isDark);
+            root.classList.toggle('theme-light', !isDark);
+        })();
+    </script>
+    <link rel="stylesheet" href="~/fonts/font-delivery.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/yaqut-theme.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/layout.css" asp-append-version="true" />
+    <script src="~/js/yaqut-main.js" asp-append-version="true" defer></script>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <partial name="_StorefrontHeader" />
+
+    @{
+        var isHomePage = ViewData["IsHomePage"] as bool? == true;
+        var mainClass = isHomePage ? "yaqut-main-full" : "yaqut-container";
+    }
+    <main class="@mainClass" id="yaqutMain" role="main">
+        @RenderBody()
+    </main>
+
+    <partial name="_StorefrontFooter" />
+    <partial name="_CartDrawer" />
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
+    <script src="~/js/layout.js" asp-append-version="true"></script>
+    <script src="~/js/cart-drawer.js" asp-append-version="true"></script>
+    <script src="~/js/checkout-draft-storage.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

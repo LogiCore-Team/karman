@@ -1,0 +1,261 @@
+@model YAGOT_2._0.Models.Cart
+@using YAGOT_2._0.Services
+@using Microsoft.AspNetCore.Html
+@{
+    ViewData["Title"] = "سلة المشتريات";
+    var items = Model?.Cartitems?.ToList() ?? new List<YAGOT_2._0.Models.Cartitem>();
+    decimal UnitPrice(YAGOT_2._0.Models.Cartitem item) => item.RetailPrice?.Price ?? item.Product?.Price ?? 0;
+    int MaxUnits(YAGOT_2._0.Models.Cartitem item)
+    {
+        if (item.Product == null) return item.Quantity;
+        if (item.RetailPrice?.SizeMl > 0) return item.Product.Stockquantity / item.RetailPrice.SizeMl;
+        if (item.Product.StockUnit == "Ml" && item.Product.VolumeMl is > 0) return item.Product.Stockquantity / item.Product.VolumeMl.Value;
+        return item.Product.Stockquantity;
+    }
+    string UnitLabel(YAGOT_2._0.Models.Cartitem item) => item.RetailPrice?.SizeMl > 0
+        ? $"{item.RetailPrice.SizeMl} مل"
+        : (item.Product?.StockUnit == "Ml" && item.Product.VolumeMl is > 0 ? $"{item.Product.VolumeMl.Value} مل" : "للقطعة");
+    decimal subtotal = items.Sum(i => i.Quantity * UnitPrice(i));
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/cart/index.css" asp-append-version="true" />
+}
+
+<div class="yq-cart" data-yq-cart-page>
+
+    @{
+        Func<dynamic, IHtmlContent> cartAction = @<a asp-controller="Products" asp-action="Index" class="btn-yaqut-outline"><i class="bi bi-arrow-left" aria-hidden="true"></i> متابعة التسوق</a>;
+        
+        var cartHeaderVM = new YAGOT_2._0.Models.PageHeaderViewModel {
+            Variant = "Utility",
+            Title = "<i class=\"bi bi-bag\" aria-hidden=\"true\"></i> سلة المشتريات",
+            Subtitle = items.Any() ? $"{items.Count} {(items.Count == 1 ? "منتج" : "منتجات")} في سلتك" : null,
+            Actions = cartAction(null)
+        };
+    }
+    <partial name="_PageHeader" model="cartHeaderVM" />
+
+    @if (TempData["Message"] != null)
+    {
+        <div class="yaqut-alert yaqut-alert--danger yq-reveal" role="alert" aria-live="polite">
+            <i class="bi bi-exclamation-circle"></i> @TempData["Message"]
+        </div>
+    }
+
+    @if (items.Any())
+    {
+        <div class="yq-cart-layout">
+
+            <!-- CART ITEMS -->
+            <div class="yq-cart-items yq-reveal">
+                @foreach (var item in items)
+                {
+                    var lineTotal = item.Quantity * UnitPrice(item);
+                    var maxUnits = MaxUnits(item);
+                    var productImageUrl = Url.Content("~/images/placeholder-product.svg");
+                    if (!string.IsNullOrWhiteSpace(item.Product?.Imageurl))
+                    {
+                        var candidateImageUrl = item.Product.Imageurl.Trim();
+                        if (Uri.TryCreate(candidateImageUrl, UriKind.Absolute, out var absoluteImageUri))
+                        {
+                            if (absoluteImageUri.Scheme == Uri.UriSchemeHttp || absoluteImageUri.Scheme == Uri.UriSchemeHttps)
+                            {
+                                productImageUrl = candidateImageUrl;
+                            }
+                        }
+                        else
+                        {
+                            var localImageUrl = candidateImageUrl.TrimStart('/');
+                            while (localImageUrl.StartsWith("./", StringComparison.Ordinal))
+                            {
+                                localImageUrl = localImageUrl[2..];
+                            }
+
+                            var pathEnd = localImageUrl.IndexOfAny(new[] { '?', '#' });
+                            var localImagePath = pathEnd >= 0 ? localImageUrl[..pathEnd] : localImageUrl;
+                            var decodedLocalPath = Uri.UnescapeDataString(localImagePath).Replace('\\', '/');
+                            var hasParentSegment = decodedLocalPath.Split('/', StringSplitOptions.RemoveEmptyEntries).Contains("..");
+                            if (!string.IsNullOrWhiteSpace(localImagePath) &&
+                                !localImagePath.Contains(':') &&
+                                !localImagePath.Contains('\\') &&
+                                !hasParentSegment)
+                            {
+                                productImageUrl = Url.Content("~/" + localImageUrl);
+                            }
+                        }
+                    }
+                    <article class="yq-cart-item yq-glass" data-yq-cart-item>
+                        <a asp-controller="Products" asp-action="Details" asp-route-id="@item.Product?.Id"
+                           class="yq-cart-item__media">
+                            <img src="@productImageUrl"
+                                 alt="@item.Product?.Name"
+                                 width="110"
+                                 height="110"
+                                 decoding="async"
+                                 data-yaqut-fallback="/images/placeholder-product.svg" />
+                        </a>
+
+                        <div class="yq-cart-item__body">
+                            <div class="yq-cart-item__head">
+                                <div>
+                                    @if (!string.IsNullOrEmpty(item.Product?.Category?.Name))
+                                    {
+                                        <span class="yq-cart-item__category">@item.Product.Category.Name</span>
+                                    }
+                                    <a asp-controller="Products" asp-action="Details" asp-route-id="@item.Product?.Id"
+                                       class="yq-cart-item__name">@item.Product?.Name</a>
+                                </div>
+                                <form asp-controller="Cart" asp-action="Remove" method="post" class="yq-cart-item__remove-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="cartItemId" value="@item.Id" />
+                                    <input type="hidden" name="productId" value="@item.Productid" />
+                                    <input type="hidden" name="retailPriceId" value="@item.RetailPriceId" />
+                                    <button type="submit" class="yq-cart-item__remove" aria-label="إزالة @item.Product?.Name من السلة">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div class="yq-cart-item__footer">
+                                <form asp-controller="Cart" asp-action="Update" method="post" class="yq-cart-item__qty-block" data-yq-cart-qty-form data-yq-cart-max-units="@maxUnits" data-yq-cart-preset-limit="@Math.Min(maxUnits, 10)">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="cartItemId" value="@item.Id" />
+                                    <input type="hidden" name="productId" value="@item.Productid" />
+                                    <input type="hidden" name="retailPriceId" value="@item.RetailPriceId" />
+                                    <input type="hidden" name="quantity" value="@item.Quantity" data-yq-cart-qty-value />
+                                    <input type="hidden" name="expectedQuantity" value="@item.Quantity" data-yq-cart-qty-expected />
+                                    <div class="yq-cart-item__qty-header">
+                                        <span class="yq-cart-item__qty-label">الكمية</span>
+                                        @if (maxUnits <= 0)
+                                        {
+                                            <span class="yq-cart-item__stock-badge yq-cart-item__stock-badge--out" role="status">
+                                                <i class="bi bi-x-circle" aria-hidden="true"></i> نفد من المخزون
+                                            </span>
+                                        }
+                                    </div>
+                                    <div class="yq-cart-item__qty-control @(maxUnits <= 0 ? "is-out-of-stock" : null)">
+                                        <select class="yq-cart-item__qty-select"
+                                                data-yq-cart-qty-select
+                                                aria-label="كمية @item.Product?.Name"
+                                                disabled="@(maxUnits <= 0 ? "disabled" : null)">
+                                            @if (maxUnits <= 0)
+                                            {
+                                                <option value="@item.Quantity" selected="selected">@item.Quantity</option>
+                                            }
+                                            else
+                                            {
+                                                @for (var quantityOption = 1; quantityOption <= Math.Min(maxUnits, 10); quantityOption++)
+                                                {
+                                                    <option value="@quantityOption"
+                                                            selected="@(item.Quantity == quantityOption)">
+                                                        @quantityOption
+                                                    </option>
+                                                }
+                                                @if (maxUnits > 10)
+                                                {
+                                                    <option value="custom" selected="@(item.Quantity > 10)">أكثر من 10 (10+)</option>
+                                                }
+                                            }
+                                        </select>
+                                        <input type="number"
+                                               value="@item.Quantity"
+                                               min="1"
+                                               max="@maxUnits"
+                                               class="yq-cart-item__qty-input @(item.Quantity <= 10 || maxUnits <= 0 ? "d-none" : null)"
+                                               data-yq-cart-qty-custom
+                                               inputmode="numeric"
+                                               aria-label="كمية @item.Product?.Name"
+                                               disabled="@(maxUnits <= 0 ? "disabled" : null)" />
+                                        <span class="yq-cart-item__qty-spinner spinner-border spinner-border-sm"
+                                              data-yq-cart-qty-spinner hidden
+                                              role="status"
+                                              aria-label="جاري تحديث الكمية"></span>
+                                    </div>
+                                    <p class="yq-cart-item__qty-feedback"
+                                       data-yq-cart-stock-feedback
+                                       role="status"
+                                       aria-live="polite"
+                                       hidden></p>
+                                </form>
+
+                                <div class="yq-cart-item__pricing">
+                                    <span class="yq-cart-item__unit-price"
+                                          data-unit-price="@UnitPrice(item).ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                                        @(UnitPrice(item).ToYaqutPrice()) / @UnitLabel(item)
+                                    </span>
+                                    <span class="yq-cart-item__line-total">
+                                        @(lineTotal.ToYaqutPrice())
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+
+            <!-- ORDER SUMMARY -->
+            <aside class="yq-cart-summary yq-reveal">
+                <div class="yq-cart-summary__content">
+                    <h2 class="yq-cart-summary__title">
+                        <i class="bi bi-receipt"></i> الفاتورة الإجمالية
+                    </h2>
+
+                    @await Html.PartialAsync("_FreeShipping")
+
+                    <div class="yq-cart-summary__total-box">
+                        <span class="yq-cart-summary__total-label">الإجمالي النهائي</span>
+                        <div class="yq-cart-summary__total-value">
+                            <span data-yq-summary-total>@(subtotal.ToYaqutPrice())</span>
+                        </div>
+                    </div>
+                </div>
+
+                <a asp-controller="Orders"
+                   asp-action="Checkout"
+                   class="btn-yaqut-gold yq-cart-checkout-btn"
+                   data-yq-cart-checkout-link
+                   data-yq-auth-required="@((!isAuthenticated).ToString().ToLowerInvariant())"
+                   data-yq-auth-modal="yqCheckoutAuthModal">
+                    <i class="bi bi-credit-card"></i> إتمام الطلب والدفع
+                </a>
+
+                <a asp-controller="Products" asp-action="Index" class="yq-cart-summary__continue">
+                    <i class="bi bi-arrow-left"></i> متابعة التسوق
+                </a>
+
+            </aside>
+        </div>
+
+        <button type="button"
+                class="yq-cart-scroll-hint"
+                data-yq-cart-scroll-hint
+                aria-label="الانتقال إلى الإجمالي والدفع"
+                hidden>
+            <i class="bi bi-arrow-down-short" aria-hidden="true"></i>
+            <span>الإجمالي والدفع</span>
+        </button>
+    }
+    else
+    {
+        <div class="yq-cart-empty yq-glass yq-reveal">
+            <div class="yq-cart-empty__icon"><i class="bi bi-bag-x"></i></div>
+            <h2 class="yq-cart-empty__title">سلتك فارغة حالياً</h2>
+            <p class="yq-cart-empty__text">
+                لم تُضف أي منتجات إلى سلتك بعد. تصفّح منتجاتنا الفاخرة واعثر على عطرك المميز.
+            </p>
+            <a asp-controller="Products" asp-action="Index" class="btn-yaqut-gold mt-3">
+                <i class="bi bi-stars"></i> تصفح المنتجات
+            </a>
+        </div>
+    }
+</div>
+
+@await Html.PartialAsync("_YaqutOperationDialog")
+
+<div class="visually-hidden" data-yq-cart-live aria-live="polite" aria-atomic="true"></div>
+
+@section Scripts {
+    <script src="~/js/cart/index.js" asp-append-version="true"></script>
+}
